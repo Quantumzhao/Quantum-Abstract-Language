@@ -1,0 +1,30 @@
+// all funtions are call-by-name
+
+let Deutsch(f) = 
+    // dot "." to show it is a composite system
+    let (x . y) = Uf(f, new(+) . new(-)) in
+    (H . measure)(x . y)
+
+// mark it unitary to use as a quantum gate
+let unitary Uf(f, x, y) = 
+    let |y'> = y in
+    (I . something)(x . xor(y', f(x)))
+
+let EPR = CNOT((new(+) . new(0))))
+
+let bellMeasure(q1 . q2) = 
+    let (x . y) = CNOT(q1 . q2) in
+    (measure(H(x)), measure(H(y)))
+
+let telep = 
+    let (x . y) = EPR in
+    let f(shared) = bellMeasure(x, shared) in
+    let encode((xPower, zPower), qubit) = 
+        X^xPower(Z^zPower(qubit))
+    in
+    let U(qubit, (x, y)) = 
+        encode((x, y), qubit)
+    in
+    let g((xPower, yPower)) = U(y, (xPower, yPower)) in
+    (f, g)
+
