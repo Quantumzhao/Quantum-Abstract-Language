@@ -6,10 +6,12 @@ let Deutsch(f) =
     (H . measure)(x . y)
 
 // mark it unitary to use as a quantum gate
+// Uf : (T' -> Int) -> qubit -> qubit -> ((qubit . qubit) -> (qubit . qubit))
 let unitary Uf(f, x, y) = 
-    let |y'> = y in
-    (I . something)(x . xor(y', f(x)))
+    // controlledByInt : (T' -> Int) -> qubit -> (qubit -> qubit)
+    (I . (fun q -> controlledByInt(f(x), q)))(x . y)
 
+// CNOT : (qubit . qubit) -> (qubit . qubit)
 let EPR = CNOT((new(+) . new(0))))
 
 let bellMeasure(q1 . q2) = 
