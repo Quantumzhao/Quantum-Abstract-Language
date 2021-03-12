@@ -15,6 +15,7 @@
 - currying
 - typing (explicit/implicit)
 - grammar style
+- claiming and disposing quantum resources
 
 # TODO
 
