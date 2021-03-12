@@ -1,0 +1,43 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            // Use IntelliSense to find out which attributes exist for C# debugging
+            // Use hover for the description of the existing attributes
+            // For further information visit https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md
+            "name": "Main",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "buildF",
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceFolder}/NotQSharp/bin/Debug/netcoreapp3.1/NotQSharp.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/NotQSharp",
+            // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+            "console": "integratedTerminal",
+            "stopAtEntry": false
+        },
+        {
+            // Use IntelliSense to find out which attributes exist for C# debugging
+            // Use hover for the description of the existing attributes
+            // For further information visit https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md
+            "name": "Simulator",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceFolder}/Simulator/bin/Debug/netcoreapp3.1/Simulator.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/Simulator",
+            // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach",
+            "processId": "${command:pickProcess}"
+        }
+    ]
+}
