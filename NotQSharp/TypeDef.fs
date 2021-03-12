@@ -3,6 +3,7 @@ module TypeDef
 open System
 open Quantum.Simulator
 open Microsoft.Quantum
+open Microsoft.Quantum.Simulation.Core
 
 type CExpr = 
     | Integer of int
@@ -19,9 +20,8 @@ and Binding = Variable * Expr
 
 and Variable = Symbol of string
 
-and QExpr = QubitExpr
+and QExpr = QubitExpr of Qubit
 
 and Expr = 
     | CExpr of CExpr
     | QExpr of QExpr
-
