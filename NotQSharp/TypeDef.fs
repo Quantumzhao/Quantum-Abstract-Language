@@ -7,7 +7,6 @@ open Microsoft.Quantum.Simulation.Core
 
 type CExpr = 
     | Integer of int
-    | Bool of bool
     | Variable of Variable
     | Prim1 of string * CExpr
     | Prim2 of string * CExpr * CExpr
