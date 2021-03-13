@@ -1,26 +1,29 @@
 module TypeDef
 
-open System
 open Quantum.Simulator
 open Microsoft.Quantum
 open Microsoft.Quantum.Simulation.Core
 
-type CExpr = 
+type Expr = 
     | Integer of int
-    | Variable of Variable
-    | Prim1 of string * CExpr
-    | Prim2 of string * CExpr * CExpr
-    | App of string * CExpr * CExpr
-    | Let of Binding * CExpr
+    | Complex of modulus: decimal * argument: decimal
+    | String of string
+    | Unit
+    | Variable of string
+    | Apply of function_name: string * arguments: Expr list
+    | Let of string * Expr
+    /// <summary>user defined functions</summary>
+    | Function of name: string * parameters: string list * body: Expr
+    /// <summary>standard library functions</summary>
+    | StdApply of name: string * parameters: Expr list
+    | Array of Expr list
+    | Qubit of Qubit
 
-and FunDef = Variable * Variable list * Expr
+type Value = 
+    | Unit_Val
+    | String_Val of string
+    | Complex_Val of decimal * decimal
+    | Integer_Val of int
+    | Array_Val of Value list
+    | Qubit_Val of Qubit
 
-and Binding = Variable * Expr
-
-and Variable = Symbol of string
-
-and QExpr = QubitExpr of Qubit
-
-and Expr = 
-    | CExpr of CExpr
-    | QExpr of QExpr
