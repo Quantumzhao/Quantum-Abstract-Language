@@ -44,7 +44,7 @@
   
 - name
 
-  > probably F##Q
+  > probably `F##Q`
 
 - [X] call by name
 
@@ -59,3 +59,26 @@
 # Example code
 
 See `./Example/test.txt`
+
+# Notes
+
+## Data Structure
+
+There are 3 types of collections in this language: 
+
+|                           | Tuple | Array | Composite system |
+| ------------------------- | ----- | ----- | ---------------- |
+| Supports indexing         | No    | Yes   | No               |
+| Supports iteration        | No    | Yes   | Yes              |
+| Supports qubit            | Yes   | No    | Yes              |
+| Supports classical data   | Yes   | Yes   | No               |
+| Supports pattern matching | Yes   | No    | No               |
+
+In addition, there are differences between classical data and qubit: 
+
+|                    | Classical data | Qubit |
+| ------------------ | -------------- | ----- |
+| Unitary operation  | Undefined      | Yes   |
+| Classical function | Yes            | No    |
+| Re-useable         | Yes            | No    |
+
