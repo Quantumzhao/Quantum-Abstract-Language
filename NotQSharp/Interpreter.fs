@@ -15,18 +15,40 @@ let find_variable env name =
 /// <param name="exp">expression</param>
 let rec interp env exp = 
     match exp with
+    // interp values
     | Integer i -> Integer_Val i
     | Complex(m, a) -> Complex_Val(m, a)
-    | String s -> String_Val s
-    | Unit -> Unit_Val
+    | Qubit q -> Qubit_Val q
+    // interp collections
     | Array exps -> interp_array env exps
+    | System qexps -> interp_system env qexps
+    | Tuple exps -> interp_tuple env exps
+    // interp references
     | Variable v -> find_variable env v
     | Apply _ -> interp_apply env exp
     | StdApply _ -> interp_std_apply env exp
     | Let _ -> interp_let env exp
-    | Function _ -> interp_function env exp
-    | Qubit q -> Qubit_Val q
+    | Match _ -> interp_match env exp
+    | FuncDef _ -> interp_function env exp
     | _ -> failwith "type error"
+
+and interp_array env exps =
+    let result_vector = 
+        List.map (interp env) exps
+    in
+    Array_Val result_vector
+
+and interp_system env qexps =
+    let result_vector =
+        List.map (interp env) qexps
+    in
+    System_Val result_vector
+
+and interp_tuple env exps =
+    let result_vector =
+        List.map (interp env) exps
+    in
+    Tuple_Val result_vector
 
 and interp_let env exp =
     failwith not_implemented_err
@@ -40,8 +62,5 @@ and interp_std_apply env exp =
 and interp_function env exp =
     failwith not_implemented_err
 
-and interp_array env exps =
-    let result_vector = 
-        List.map (interp env) exps
-    in
-    Array_Val result_vector
+and interp_match env exp =
+    failwith not_implemented_err
