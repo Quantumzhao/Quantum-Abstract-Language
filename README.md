@@ -64,6 +64,8 @@ See `./Example/test.txt`
 
 The overall syntax is Lisp-like. 
 
+We use (F# documentation)[https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/xml-documentation]
+
 ## Data Structure
 
 There are 3 types of collections in this language: 
