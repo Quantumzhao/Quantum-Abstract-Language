@@ -10,7 +10,11 @@
   
 - high order function (`map`, `filter`, etc.)
 
+  > `map`, `fori`
+
 - array vs. tuple (composite system) notation
+
+  > use composite system (`<q1 . q2>`) and tuple for qubits, array for classical data
 
 - ⊕ `xor` (high/low level? Quantum Fourier Transformation? )
 
@@ -18,23 +22,37 @@
 
   > No
 
-- indexing
+- [X] indexing
+
+  > Normal style
 
 - anonymous function
 
+  > No
+
 - user defined function
+
+  > Yes
 
 - representation of tensor product
 
-- standard library
+  > for `n <= 2`, use `<q1 . q2>`, otherwise use `map` orother collection ops
 
 - recursion/mutually recursive
 
+  > No for now
+
 - currying
+
+  > No
 
 - typing (explicit/implicit)
 
+  > No
+
 - grammar style
+
+  > Racket style
 
 - claiming and disposing quantum resources
 
@@ -44,7 +62,7 @@
   
 - name
 
-  > probably `F##Q`
+  > probably F##Q
 
 - [X] call by name
 
@@ -85,9 +103,3 @@ In addition, there are differences between classical data and qubit:
 | Unitary operation  | Undefined      | Yes   |
 | Classical function | Yes            | No    |
 | Re-useable         | Yes            | No    |
-
-## Functions
-
-### Unitary operations
-
-### Classical functions
