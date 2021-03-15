@@ -5,18 +5,36 @@ let Deutsch(f) =
     let (x . y) = Uf(f, new(+) . new(-)) in
     (H . measure)(x . y)
 
+(define Deutsch (f)
+    (let
+        ((<x . y> (Uf f (new +) (new -))))
+        ((H x), (measure y))))
+
 // mark it unitary to use as a quantum gate
 // Uf : (T' -> Int) -> qubit -> qubit -> ((qubit . qubit) -> (qubit . qubit))
 let unitary Uf(f, x, y) = 
     // controlledByInt : (T' -> Int) -> qubit -> (qubit -> qubit)
     (I . (fun q -> controlledByInt(f(x), q)))(x . y)
 
+(define Uf (f <x . y>)
+    (define ctl-by-int-wrapper (q)
+        (controlledByInt (f x) q))
+    <x . y>)
+
 // CNOT : (qubit . qubit) -> (qubit . qubit)
-let EPR = CNOT((new(+) . new(0))))
+let EPR = CNOT((new(+) . new(0)))
+
+(define EPR
+    (CNOT (new +) (new -)))
 
 let bellMeasure(q1 . q2) = 
     let (x . y) = CNOT(q1 . q2) in
     (measure(H(x)), measure(H(y)))
+
+(define bell-measure (<q1 . q2>)
+    (let
+        ((<x . y> (CNOT q1 q2)))
+        ((measure (H x)), (measure (H y)))))
 
 let telep = 
     let (x . y) = EPR in
@@ -30,3 +48,15 @@ let telep =
     let g((xPower, yPower)) = U(y, (xPower, yPower)) in
     (f, g)
 
+(define telep
+    (let
+        ((<x . y> EPR))
+        (define f (shared)
+            (bell-measure x shared))
+        (define encode ((xPower, zPower) qubit)
+            (^ X xPower)(^ Z zPower) qubit)))
+        (define U (qubit (x, y))
+            (encode (x, y) qubit))
+        (define g ((xPower, yPower))
+            (U y (xPower, zPower)))
+        (f, g)
