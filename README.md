@@ -62,6 +62,8 @@ See `./Example/test.txt`
 
 # Notes
 
+The overall syntax is Lisp-like. 
+
 ## Data Structure
 
 There are 3 types of collections in this language: 
@@ -82,3 +84,8 @@ In addition, there are differences between classical data and qubit:
 | Classical function | Yes            | No    |
 | Re-useable         | Yes            | No    |
 
+## Functions
+
+### Unitary operations
+
+### Classical functions
