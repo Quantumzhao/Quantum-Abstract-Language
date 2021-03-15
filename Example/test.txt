@@ -4,12 +4,17 @@ let Deutsch(f) =
     // dot "." to show it is a composite system
     let (x . y) = Uf(f, new(+) . new(-)) in
     (H . measure)(x . y)
+    // (H(x), measure(y))
+    //((x . y) . z)
+    // (x . y . z)
+    // (x . y)
 
 // mark it unitary to use as a quantum gate
 // Uf : (T' -> Int) -> qubit -> qubit -> ((qubit . qubit) -> (qubit . qubit))
 let unitary Uf(f, x, y) = 
     // controlledByInt : (T' -> Int) -> qubit -> (qubit -> qubit)
     (I . (fun q -> controlledByInt(f(x), q)))(x . y)
+    // (x, (fun q -> controlledByInt(f(x), q)) y )
 
 // CNOT : (qubit . qubit) -> (qubit . qubit)
 let EPR = CNOT((new(+) . new(0))))
@@ -30,3 +35,11 @@ let telep =
     let g((xPower, yPower)) = U(y, (xPower, yPower)) in
     (f, g)
 
+// tensor : (qubit -> qubit) -> (qubit -> qubit) -> ((qubit . qubit) -> (qubit . qubit))
+// tensor : qubit -> qubit -> (qubit . qubit)
+//SetQubitState(initial, q0);
+//SetQubitState(Zero, q1);
+//
+//H(q0);
+//CNOT(q0, q1);
+//let res = M(q0);
