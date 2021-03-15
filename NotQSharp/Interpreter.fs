@@ -1,12 +1,10 @@
 module Interpreter
 
 open TypeDef
-
-let not_implemented_err = 
-    "not implemented"
+open Helper
 
 let find_variable env name =
-    failwith not_implemented_err
+    failwith "not implemented"
 
 /// <summary>
 /// interprets the expression under the environment
@@ -25,9 +23,10 @@ let rec interp env exp =
     | Tuple exps -> interp_tuple env exps
     // interp references
     | Variable v -> find_variable env v
+    // interp syntax structure
     | Apply _ -> interp_apply env exp
-    | StdApply _ -> interp_std_apply env exp
-    | Let _ -> interp_let env exp
+    | Let_Fun _ -> interp_let_fun env exp
+    | Let_Var _ -> interp_let_var env exp
     | Match _ -> interp_match env exp
     | FuncDef _ -> interp_function env exp
     | _ -> failwith "type error"
@@ -50,17 +49,17 @@ and interp_tuple env exps =
     in
     Tuple_Val result_vector
 
-and interp_let env exp =
-    failwith not_implemented_err
+and interp_let_fun env exp =
+    not_implemented_err ()
+
+and interp_let_var env exp =
+    not_implemented_err ()
 
 and interp_apply env exp =
-    failwith not_implemented_err
-
-and interp_std_apply env exp =
-    failwith not_implemented_err
+    not_implemented_err ()
 
 and interp_function env exp =
-    failwith not_implemented_err
+    not_implemented_err ()
 
 and interp_match env exp =
-    failwith not_implemented_err
+    not_implemented_err ()
