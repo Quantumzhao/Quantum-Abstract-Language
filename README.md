@@ -82,7 +82,7 @@ See `./Example/test.txt`
 
 The overall syntax is Lisp-like. 
 
-We use (F# documentation)[https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/xml-documentation]
+We use [F# XML documentation](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/xml-documentation)
 
 ## Data Structure
 
@@ -95,6 +95,12 @@ There are 3 types of collections in this language:
 | Supports qubit            | Yes   | No    | Yes              |
 | Supports classical data   | Yes   | Yes   | No               |
 | Supports pattern matching | Yes   | No    | No               |
+| Supports literal          | Yes   | No    | No               |
+
+Some explanations: 
+
+- Arrays cannot include qubits because the no-cloning theorem: Once the qubit evolves via some unitary matrices, the new state exists in the form of function return value and is no longer an element of the array. This will leave a hole in the sequenced data structure, invalidating future enumeration operations. 
+- Composite system cannot include classical data because it is a data structure specialized for quantum state evolvement. 
 
 In addition, there are differences between classical data and qubit: 
 
@@ -103,3 +109,14 @@ In addition, there are differences between classical data and qubit:
 | Unitary operation  | Undefined      | Yes   |
 | Classical function | Yes            | No    |
 | Re-useable         | Yes            | No    |
+
+Some explanations: 
+
+- qubits are not re-usable due to no-cloning theorem. For example, 
+
+  ```F#
+  let q = qubit in
+  CNOT q qubit
+  ```
+
+  This will be a horrible error. 
