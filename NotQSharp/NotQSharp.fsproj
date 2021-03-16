@@ -5,9 +5,9 @@
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Helper.fs" />
     <Compile Include="TokDef.fs" />
     <Compile Include="TypeDef.fs" />
+    <Compile Include="Helper.fs" />
     <Compile Include="StandardLibrary.fs" />
     <Compile Include="Parser.fs" />
     <Compile Include="Lexer.fs" />

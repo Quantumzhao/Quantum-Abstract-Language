@@ -20,7 +20,7 @@ let arr_2_lst arr =
 /// </summary>
 /// <param name="path">path of the file</param>
 let get_code path =
-    File.ReadAllText(path).Split([|' '; '\n'; '\t' |])
+    File.ReadAllText(path).Split([|' '; '\n'; '\t'; '\r' |], StringSplitOptions.RemoveEmptyEntries)
 
 /// <summary>
 /// try to convert a string to either a number or an id. 

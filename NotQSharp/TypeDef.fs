@@ -1,7 +1,5 @@
 module TypeDef
 
-open Quantum.Simulator
-open Microsoft.Quantum
 open Microsoft.Quantum.Simulation.Core
 
 type Pattern =
@@ -22,8 +20,6 @@ type Expr =
     /// let binding of a function
     | Let_Fun of name: string * paras: string list * body: Expr * In: Expr
     | Match of condition: Expr * cases: (Pattern * Expr) list
-    /// user defined functions
-    | FuncDef of name: string * parameters: string list * body: Expr
     | Array of Expr list
     /// fixed number of expressions, supports pattern matching
     | Tuple of Expr list

@@ -13,7 +13,7 @@ let rec parse_let tokens : Expr * Token list =
             id :: finished', rem
         // base case, 
         // an equal marks the end of parameters
-        | Equal :: _ -> finished, tokens
+        | Equal :: after_equals -> finished, after_equals
         | redundant -> syntax_err Equal redundant
     // ---| Starts here |---
     match tokens with

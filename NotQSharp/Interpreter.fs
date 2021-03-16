@@ -4,7 +4,7 @@ open TypeDef
 open Helper
 
 let find_variable env name =
-    failwith "not implemented"
+    not_implemented_err ()
 
 /// <summary>
 /// interprets the expression under the environment
@@ -28,8 +28,8 @@ let rec interp env exp =
     | Let_Fun _ -> interp_let_fun env exp
     | Let_Var _ -> interp_let_var env exp
     | Match _ -> interp_match env exp
-    | FuncDef _ -> interp_function env exp
-    | _ -> failwith "type error"
+    | Unit -> Unit_Val
+    | _ -> not_implemented_err ()
 
 and interp_array env exps =
     let result_vector = 

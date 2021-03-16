@@ -5,15 +5,17 @@ open Microsoft.Quantum.Simulation.Simulators
 open System
 open System.IO
 open Lexer
+open TypeDef
+open Parser
+open Helper
 
-/// given a list of tokens, outputs a complete list(string) of the tokens
-let pretty_print tokens = 
-    List.fold (fun acc t -> acc + t.ToString() + " ") "" tokens
 
 [<EntryPoint>]
 let main argv =
     let dir = Directory.GetCurrentDirectory()
-    let out = lexer (dir + "/../Example/let")
+    let tokens = lexer (dir + "/../Example/let")
+    let expr, _ = parse tokens
     Console.WriteLine "Hello"
-    Console.WriteLine (pretty_print out)
+    Console.WriteLine (pretty_draw expr)
+    Console.WriteLine (pretty_print tokens)
     0 // return an integer exit code
