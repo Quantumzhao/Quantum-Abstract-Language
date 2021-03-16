@@ -7,6 +7,9 @@ type Token =
     | In
     | Match
     | With
+    | VBar
+    | Underline
+    | Arrow
     | Equal
     | Comma
     | Integer of int

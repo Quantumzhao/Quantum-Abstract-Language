@@ -39,8 +39,8 @@ let match_num_id string =
             None
     // match th numerals or ids
     match string with
+    | Match "[0-9]+\.[0-9]+" string -> Decimal (decimal string)
     | Match "[0-9]+" string -> Integer (int string)
-    | Match "[0-9]\.?[0-9]+" string -> Decimal (decimal string)
     | Match "([a-z]+[A-Z]*[0-9]*)+" string -> Identifier string
     | _ -> failwith (format_err string)
 
@@ -53,6 +53,9 @@ let match_rule word =
     | "in" -> In
     | "match" -> Match
     | "with" -> With
+    | "|" -> VBar
+    | "_" -> Underline
+    | "->" -> Arrow
     | "=" -> Equal
     | "," -> Comma
     | _ -> match_num_id word

@@ -14,7 +14,9 @@ type Expr =
     | Unit
     /// normal values, qubits and functions
     | Variable of string
-    | Apply of function_name: string * arguments: Expr list
+    /// Note that the function 
+    /// can also be a return value from an expression
+    | Apply of func: Expr * arguments: Expr list
     /// let binding of a variable
     | Let_Var of name: string * body: Expr * In: Expr
     /// let binding of a function

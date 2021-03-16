@@ -47,7 +47,28 @@ let rec parse_let tokens : Expr * Token list =
     | other -> syntax_err Let other
 
 and parse_match tokens =
-    not_implemented_err ()
+    // parse the condition: match xxx with
+    // assert if it is a match block, and consume these tokens
+    let parse_condition tokens = 
+        not_implemented_err ()
+    // parse a single case, including the pattern and corresponding branch
+    let parse_case tokens =
+        not_implemented_err ()
+    // parse all cases recursively
+    let rec parse_cases finished tokens =
+        // the first seen case
+        // case: the first case
+        // rest: all tokens left after parsing the 1st case
+        let case, rest = parse_case tokens
+        // cases: all cases after the 1st case
+        // rest': all tokens after parsing all cases
+        //        i.e. tokens left unused after parsing the whole match block
+        let cases, rest' = parse_cases finished rest
+        case :: cases, rest'
+    // ----| starts here |----
+    let cond, after_cond = parse_condition tokens
+    let cases, unused = parse_cases [] after_cond
+    Match(cond, cases), unused
 
 and parse_integer tokens =
     match tokens with
@@ -59,6 +80,14 @@ and parse_decimal tokens =
     // in this case, the complex is just r*e^0
     | Decimal d :: rest -> Complex(d, 0m), rest
     | other -> syntax_err Decimal other
+
+/// parse any expression related to parenthesis,
+/// also include apply and tuple
+and parse_apply_tuple_w_paren tokens =
+    not_implemented_err ()
+
+and parse_tuple first_xp tokens =
+    not_implemented_err ()
 
 /// the main parse function
 and parse tokens : Expr * Token list =
