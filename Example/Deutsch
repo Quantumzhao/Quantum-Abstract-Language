@@ -1,0 +1,20 @@
+// Uf : ({0, 1} -> {0, 1}) -> System -> System
+// In this case, System consists of 2 qubits
+let Uf f xy = 
+    match to_tuple xy with
+    | x , y -> 
+        // controlledByInt : (a' -> int) -> qubit -> (qubit -> qubit)
+        let ctl_by_int_wrapper ctl q  = controlledByInt ( f x ) q
+        ( x , ctl_by_int_wrapper y )
+in
+
+let deutsch f = 
+    let xy = Uf f ( system + - ) in
+    match to_tuple xy with
+    | x , y -> ( H x , measure y )
+in
+
+// const : {0, 1} -> {0, 1}
+let const x = 0 in
+
+deutsch const

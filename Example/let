@@ -1,2 +1,2 @@
-let id x = x in
-42
+let function x y z = x in
+42.0
