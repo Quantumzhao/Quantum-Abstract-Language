@@ -72,6 +72,13 @@
 
 - pattern matching
 
+Needs inquiry:
+
+- whether to implement adjoint variant
+- how to verify a unitary operation programmatically
+- Hadamard sandwich
+- why Q# measures in Z not I
+
 # TODO
 
 - [ ] a fully functional lexer
