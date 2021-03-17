@@ -2,13 +2,14 @@ module Interpreter
 
 open TypeDef
 open Helper
+open StandardLibrary
 
 // TODO: qubit support
 let rec find_variable env name =
     match env with
-    | (entry_name, value) :: _ when entry_name = name -> value
+    | (entry_name, value) :: _ when entry_name = name -> Some value
     | _ :: rest -> find_variable rest name
-    | [] -> no_such_element_err name env
+    | [] -> None
 
 /// <summary>
 /// interprets the expression under the environment
@@ -26,7 +27,13 @@ let rec interp env exp =
     | System qexps -> interp_system env qexps
     | Tuple exps -> interp_tuple env exps
     // interp references
-    | Variable v -> find_variable env v
+    | Variable v -> 
+        match find_variable env v with
+        | Some value -> value
+        | None -> 
+            match find_any v with
+            | Some value -> value
+            | None -> failwith $"{v} is not defined"
     // interp syntax structure
     | Apply(func, args) -> interp_apply env func args
     | Let_Fun(name, ps, body, in_expr) -> interp_let_fun env name ps body in_expr
@@ -151,6 +158,7 @@ and interp_match env cond cases =
                 else
                     // otherwise jump to next
                     interp_match_rec env cond rest_c
-        | _, _ -> failwith $"{cond} currently is not supoorted in pattern matching"
+        | _, _ -> 
+         failwith $"{cond} currently is not supoorted in pattern matching"
     // ----| starts here |----
     interp_match_rec env (interp env cond) cases

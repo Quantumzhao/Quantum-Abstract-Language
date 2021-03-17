@@ -11,6 +11,13 @@ let syntax_err expect actual =
 let no_such_element_err arg collection =
     failwith $"cannot find {arg} in {collection}"
 
+/// <summary>
+/// converts array (any sequence) to F# list
+/// </summary>
+/// <param name="arr">the array</param>
+let arr_2_lst arr =
+    [for e in arr do yield e]
+
 /// given a list of tokens, outputs a complete list(string) of the tokens
 let pretty_print tokens = 
     List.fold (fun acc t -> acc + $"[{t.ToString()}]" + " ") "" tokens
@@ -40,7 +47,7 @@ let rec pretty_draw (ast: Expr) =
         multi_node "Let_Fun" (name + " " + drawn_params + drawn_body + drawn_expr)
     | Match(cond, cases) -> 
         let drawn_cond = pretty_draw cond
-        let draw_single_case pattern expr = 
-            pattern.ToString() + ": " + (pretty_draw expr)
+        let draw_single_case (patterns, expr) = 
+            patterns.ToString() + ": " + (pretty_draw expr)
         let drawn_cases = pretty_print (List.map draw_single_case cases)
         multi_node "Match" (drawn_cond + drawn_cases)

@@ -4,16 +4,10 @@ open System
 open System.IO
 open System.Text.RegularExpressions
 open TokDef
+open Helper
 
 let format_err id =
     failwith $"invalid format {id}"
-
-/// <summary>
-/// converts array (any sequence) to F# list
-/// </summary>
-/// <param name="arr">the array</param>
-let arr_2_lst arr =
-    [for e in arr do yield e]
 
 /// <summary>
 /// cut the src code file into fragments according to space characters
@@ -41,7 +35,7 @@ let match_num_id string =
     match string with
     | Match "[0-9]+\.[0-9]+" string -> Decimal (decimal string)
     | Match "[0-9]+" string -> Integer (int string)
-    | Match "([a-z]+[A-Z]*[0-9]*)+" string -> Identifier string
+    | Match "[a-z]|[A-Z]([a-z]*[A-Z]*[0-9]*)*" string -> Identifier string
     | _ -> failwith (format_err string)
 
 /// just match rules

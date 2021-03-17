@@ -8,14 +8,17 @@ open Lexer
 open TypeDef
 open Parser
 open Helper
+open Interpreter
 
 
 [<EntryPoint>]
 let main argv =
     let dir = Directory.GetCurrentDirectory()
-    let tokens = lexer (dir + "/../Example/match")
+    let tokens = lexer (dir + "/../Example/composite")
     let expr, _ = parse tokens
+    let res = interp [] expr
     Console.WriteLine "Hello"
     Console.WriteLine (pretty_print tokens)
     Console.WriteLine (pretty_draw expr)
+    Console.WriteLine res
     0 // return an integer exit code
