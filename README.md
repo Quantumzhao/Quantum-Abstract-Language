@@ -8,15 +8,15 @@
 
   > ok
   
-- high order function (`map`, `filter`, etc.)
+- [x] high order function (`map`, `filter`, etc.)
 
   > `map`, `fori`
 
-- array vs. tuple (composite system) notation
+- [x] array vs. tuple (composite system) notation
 
   > use composite system (`<q1 . q2>`) and tuple for qubits, array for classical data
 
-- ⊕ `xor` (high/low level? Quantum Fourier Transformation? )
+- [x] ⊕ `xor` (high/low level? Quantum Fourier Transformation? )
 
 - boolean
 
@@ -74,13 +74,18 @@
 
 # TODO
 
+- [ ] a fully functional lexer
+  - [ ] support line comment
+  - [ ] support string
+  - [ ] full support of symbol lexing
+
 # Example code
 
 See `./Example/test.txt`
 
 # Notes
 
-The overall syntax is Lisp-like. 
+The overall syntax is ML-like. 
 
 We use [F# XML documentation](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/xml-documentation)
 
@@ -104,11 +109,11 @@ Some explanations:
 
 In addition, there are differences between classical data and qubit: 
 
-|                    | Classical data | Qubit |
-| ------------------ | -------------- | ----- |
-| Unitary operation  | Undefined      | Yes   |
-| Classical function | Yes            | No    |
-| Re-useable         | Yes            | No    |
+|                        | Classical data | Qubit |
+| ---------------------- | -------------- | ----- |
+| Unitary transformation | Undefined      | Yes   |
+| Classical function     | Yes            | No    |
+| Re-useable             | Yes            | No    |
 
 Some explanations: 
 
@@ -120,3 +125,115 @@ Some explanations:
   ```
 
   This will be a horrible error. 
+
+## Blocks
+
+### `let` Binding
+
+For the formal definition of this block, please see the source code. 
+
+`let` can be in one of the following forms: 
+
+#### Single variable binding
+
+```F#
+let x = 0 in
+...
+```
+
+#### Function declaration
+
+```F#
+let id x = x in
+...
+```
+
+#### Tuple deconstruction and multi-variable binding
+
+The basic form is like this:
+
+```F#
+let a, b = tuple in
+...
+```
+
+However, it is also possible to use wildcard
+
+```f#
+let a, _ = tuple in
+...
+```
+
+And even further: 
+
+```f#
+let _, _ = tuple in
+...
+```
+
+> Note that the `in` keyword cannot be omitted. 
+>
+> Also, the following syntax is considered invalid: 
+>
+> ```f#
+> let (a, b) = tuple in
+> ...
+> ```
+
+### Pattern matching
+
+Apart from the aforementioned tuple deconstruction in `let` binding, it is also possible to use pattern matching in `match` block. 
+
+For the formal definition of this block, please see the source code. 
+
+```f#
+match tuple with
+| 0, b, c -> b
+| a, 0, _ -> a
+| _ -> 0
+```
+
+
+
+Note that the language does not enforce type check, so it is possible to write the following code, although its behavior is undefined: 
+
+```f#
+match tuple with
+| 1, 2 -> 1
+| a, _, _ -> a
+```
+
+It serves the functionality of `if` block: 
+
+```f#
+match to_bool num with
+| 0 -> 0
+| 1 -> 1
+```
+
+In which case, `to_bool` function has the following definition: 
+$$
+\text{to_bool}:\Z\mapsto\{0,1\} \\
+\text{to_bool}(x)=
+\begin{cases}
+0&\text{ if x=0}\\
+1&\text{ otherwise}
+\end{cases}
+$$
+There are some peculiarities: 
+
+- the language only supports the pattern matching of **tuple** and **scalar values**
+
+- the pattern should not wrapped in parenthesis. 
+
+- the pattern is not recursive, that is, 
+
+  ```f#
+  match tuple with
+  | (_, _), _ -> 0
+  ```
+
+  Is illegal
+
+- 
+
