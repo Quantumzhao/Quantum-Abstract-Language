@@ -1,0 +1,5 @@
+let x = 2 in
+    match x with
+    | 1 -> 0
+    | 0 -> 1
+    | _ -> I

@@ -1,15 +1,19 @@
 // Uf : ({0, 1} -> {0, 1}) -> System -> System
 // In this case, System consists of 2 qubits
-let Uf f xy = 
-    match to_tuple xy with
-    | x , y -> 
-        // controlledByInt : (a' -> int) -> qubit -> (qubit -> qubit)
-        let ctl_by_int_wrapper ctl q  = controlledByInt ( f x ) q
-        ( x , ctl_by_int_wrapper y )
+let Uf f ctls tgts = 
+    let controlled_on_int_wrapper markedElement targets = 
+        let apply_to_each_CA_wrapper reg = 
+            ApplyToEachCA X reg
+        in
+        ( ControlledOnInt markedElement apply_to_each_CA_wrapper ) ctls targets
+    in
+    let f_map = 
+        map f power_set ( array 0 1 )
+    fold controlled_on_int_wrapper tgts f_map
 in
 
 let deutsch f = 
-    let xy = Uf f ( system + - ) in
+    let xy = Uf f ( system + ) ( system - ) in
     match to_tuple xy with
     | x , y -> ( H x , measure y )
 in
