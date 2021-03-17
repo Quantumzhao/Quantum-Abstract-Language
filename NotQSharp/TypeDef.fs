@@ -8,6 +8,12 @@ type Pattern =
     | Int_Lit of int
     | Comp_Lit of decimal
 
+type QubitOption =
+    | Zero
+    | One
+    | Plus
+    | Minus
+
 type Expr = 
     | Integer of int
     | Complex of modulus: decimal * argument: decimal
