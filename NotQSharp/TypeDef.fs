@@ -5,6 +5,8 @@ open Microsoft.Quantum.Simulation.Core
 type Pattern =
     | Placeholder of string
     | WildCard
+    | Int_Lit of int
+    | Comp_Lit of decimal
 
 type Expr = 
     | Integer of int
@@ -21,7 +23,7 @@ type Expr =
     | Let_Var of name: string * body: Expr * In: Expr
     /// let binding of a function
     | Let_Fun of name: string * paras: string list * body: Expr * In: Expr
-    | Match of condition: Expr * cases: (Pattern * Expr) list
+    | Match of condition: Expr * cases: (Pattern list * Expr) list
     | Array of Expr list
     /// fixed number of expressions, supports pattern matching
     | Tuple of Expr list
@@ -39,5 +41,6 @@ type Value =
     | System_Val of Value list
     | Tuple_Val of Value list
     | Qubit_Val of Qubit
-    /// function as a value (include complete definition and body)
+    /// function as a value (include complete definition and body).
+    /// Short for reduced function. Just a fancy name, nothing else
     | Function_Red of string * string list * Expr

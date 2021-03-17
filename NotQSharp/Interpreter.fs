@@ -3,8 +3,12 @@ module Interpreter
 open TypeDef
 open Helper
 
-let find_variable env name =
-    not_implemented_err ()
+// TODO: qubit support
+let rec find_variable env name =
+    match env with
+    | (entry_name, value) :: _ when entry_name = name -> value
+    | _ :: rest -> find_variable rest name
+    | [] -> no_such_element_err name env
 
 /// <summary>
 /// interprets the expression under the environment
@@ -24,42 +28,129 @@ let rec interp env exp =
     // interp references
     | Variable v -> find_variable env v
     // interp syntax structure
-    | Apply _ -> interp_apply env exp
-    | Let_Fun _ -> interp_let_fun env exp
-    | Let_Var _ -> interp_let_var env exp
-    | Match _ -> interp_match env exp
+    | Apply(func, args) -> interp_apply env func args
+    | Let_Fun(name, ps, body, in_expr) -> interp_let_fun env name ps body in_expr
+    | Let_Var(name, binding, in_expr) -> interp_let_var env name binding in_expr
+    | Match(cond, cases) -> interp_match env cond cases
     | Unit -> Unit_Val
     | _ -> not_implemented_err ()
 
+// TODO: qubit support
 and interp_array env exps =
     let result_vector = 
         List.map (interp env) exps
     in
     Array_Val result_vector
 
+// TODO: qubit support
 and interp_system env qexps =
     let result_vector =
         List.map (interp env) qexps
     in
     System_Val result_vector
 
+// TODO: qubit support
 and interp_tuple env exps =
     let result_vector =
         List.map (interp env) exps
     in
     Tuple_Val result_vector
 
-and interp_let_fun env exp =
-    not_implemented_err ()
+// TODO: qubit support
+and interp_let_fun env name ps body in_expr =
+    // put all info into the reduced function without changing anything
+    // since here it follows call by name
+    let fun_red = Function_Red(name, ps, body)
+    let new_env = (name, fun_red) :: env
+    interp new_env in_expr
 
-and interp_let_var env exp =
-    not_implemented_err ()
+// TODO: qubit support
+and interp_let_var env name exp in_expr =
+    let res = interp env exp
+    let new_env = (name, res) :: env
+    interp new_env in_expr
 
-and interp_apply env exp =
-    not_implemented_err ()
+// not sure if it is compatible with qubits
+and interp_apply env func args =
+    // whatever what the expression might be, evaluate it first
+    // it may actually be a variable or expression, doesn't matter
+    let fun_red = interp env func
+    match fun_red with
+    | Function_Red(name, ps, body) when ps.Length = args.Length -> 
+        // first evaluate all the arguments
+        let eval'ed_args = List.map (interp env) args
+        // then pair them with parameters
+        let param_arg_pair = List.zip ps eval'ed_args
+        // pack into a set of environment
+        // sorta hack, should replace it if there's any better way
+        let new_env = List.append param_arg_pair param_arg_pair
+        interp new_env body
+    | Function_Red(_, ps, _) -> 
+        failwith $"argument number mismatch: expect {ps.Length}, actual {args.Length}"
+    | other when args.Length <> 0 -> 
+        failwith $"{other} is not a function, hence cannot apply {args}"
+    // apply "apply" to values. wierd, but acceptable
+    | other -> other
 
-and interp_function env exp =
-    not_implemented_err ()
-
-and interp_match env exp =
-    not_implemented_err ()
+// TODO: qubit support
+and interp_match env cond cases =
+    // cond: condition
+    let rec interp_match_rec env cond cases =
+        match cases, cond with
+        // when no available cases left, and condition is a unit
+        // wierd, but acceptable
+        | [], Unit_Val -> Unit_Val
+        // running out of cases, no match cases
+        | [], _ -> failwith $"no match cases with {cond}"
+        // when the pattern consists of only one placeholder/wildcard
+        | (pattern :: [], expr) :: rest, _ -> 
+            match pattern with
+            | Placeholder p -> 
+                // put the value of condition expression in the environment
+                let new_env = (p, cond) :: env
+                // evaluate the branch
+                interp new_env expr
+            | WildCard -> interp env expr
+            | Int_Lit i when cond = Integer_Val i -> interp env expr
+            | Comp_Lit m when cond = Complex_Val(m, 0m) -> interp env expr
+            // if no match, jump to next
+            | _ -> interp_match_rec env cond rest
+        // when the pattern is a tuple and the condition returns a tuple as well
+        | (patterns, expr) :: rest_c, Tuple_Val vs ->
+            // asserts if the lengths match
+            // we should probably accept cases when length mismatch
+            if patterns.Length <> vs.Length then
+                interp_match_rec env cond rest_c
+            else
+                // p_v_pair: the list of pairs, 
+                // and each of them consists of a single placeholder/wildcard 
+                // and an evaluated value from the condition tuple
+                let p_v_pair = List.zip patterns vs
+                // states if the value satifies the pattern described
+                let match_rule (pattern, value) =
+                    match pattern, value with
+                    | Int_Lit i1, Integer_Val i2 -> i1 = i2
+                    | Comp_Lit m1, Complex_Val(m2, a2) -> m1 = m2 && a2 = 0m
+                    // by default, placeholder and wildcard are considered matchable
+                    | _ -> true
+                // assumes the given pattern and value is compatible
+                // extracts the variable in the pattern (if applicable)
+                // and put it into a new list
+                let fill_in_pattern (pattern, value) accumulator = 
+                    match pattern with
+                    // meaningful binding
+                    | Placeholder p -> (p, value) :: accumulator
+                    | _ -> accumulator
+                // if this tuple of values indeed satidfies the pattern
+                if List.fold (fun acc x -> acc && (match_rule x)) true p_v_pair then
+                    // put all qualified binded variables (from the pattern) into a new list
+                    let matched_pairs = List.foldBack fill_in_pattern p_v_pair []
+                    // add them to th environment
+                    let new_env = List.append matched_pairs env
+                    interp new_env expr
+                else
+                    // otherwise jump to next
+                    interp_match_rec env cond rest_c
+        | _, _ -> failwith $"{cond} currently is not supoorted in pattern matching"
+    // ----| starts here |----
+    interp_match_rec env (interp env cond) cases

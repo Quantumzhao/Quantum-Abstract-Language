@@ -49,22 +49,69 @@ let rec parse_let tokens : Expr * Token list =
 and parse_match tokens =
     // parse the condition: match xxx with
     // assert if it is a match block, and consume these tokens
-    let parse_condition tokens = 
-        not_implemented_err ()
+    let parse_condition tokens : (Expr * Token list) = 
+        match tokens with
+        | TokDef.Match :: rest -> 
+            // expr: the expression wrapped in "match ... with"
+            // rest': every token after this expression, including "With"
+            //        i.e. [With] ...
+            let expr, rest' = parse rest
+            match rest' with
+            // if rest' is in the correct format, i.e. starting with "With", 
+            // return the condition expression together with all remaining tokens after "With"
+            | With :: rest'' -> expr, rest''
+            | other -> syntax_err With other
+        | other -> syntax_err TokDef.Match other
     // parse a single case, including the pattern and corresponding branch
+    // assume the token "|" has already been consumed
     let parse_case tokens =
-        not_implemented_err ()
+        // parse the patterns, the part before "->"
+        // e.g. a, b, c or _, _, a
+        // finished: finished tokens
+        // tokens: tokens to be parsed
+        let rec parse_patterns finished tokens =
+            match tokens with
+            | sth :: Comma :: rest -> 
+                // finished': every pattern that as been parsed; everything after this one
+                // rest': all tokens left after parsing the 1st case
+                let finished', rest' = parse_patterns finished rest
+                match sth with
+                | Identifier id -> (Placeholder id) :: finished', rest'
+                | Underline -> WildCard :: finished', rest'
+                | TokDef.Integer i -> (Int_Lit i) :: finished', rest'
+                | Decimal d -> (Comp_Lit d) :: finished', rest'
+                | other -> syntax_err "Identifier or Underline" other
+            // the base case
+            | sth :: Arrow :: rest -> 
+                match sth with
+                | Identifier id -> (Placeholder id) :: finished, rest
+                | Underline -> WildCard :: finished, rest
+                | TokDef.Integer i -> (Int_Lit i) :: finished, rest
+                | Decimal d -> (Comp_Lit d) :: finished, rest
+                | other -> syntax_err "Identifier or Underline" other
+            | Arrow :: _ -> syntax_err "at least 1 pattern" Arrow
+            | other -> syntax_err "some patterns" other
+        // ----| parse_case starts here |----
+        match tokens with
+        | VBar :: rest -> 
+            let patterns, rest = parse_patterns [] rest
+            let expr, unused = parse rest
+            (patterns, expr), unused
+        | other -> syntax_err VBar other
     // parse all cases recursively
     let rec parse_cases finished tokens =
-        // the first seen case
-        // case: the first case
-        // rest: all tokens left after parsing the 1st case
-        let case, rest = parse_case tokens
-        // cases: all cases after the 1st case
-        // rest': all tokens after parsing all cases
-        //        i.e. tokens left unused after parsing the whole match block
-        let cases, rest' = parse_cases finished rest
-        case :: cases, rest'
+        match tokens with
+        | VBar :: _ -> 
+            // the first seen case
+            // case: the first case
+            // rest: all tokens left after parsing the 1st case
+            let case, rest = parse_case tokens
+            // cases: all cases after the 1st case
+            // rest': all tokens after parsing all cases
+            //        i.e. tokens left unused after parsing the whole match block
+            let cases, rest' = parse_cases finished rest
+            case :: cases, rest'
+        | _ -> finished, tokens
     // ----| starts here |----
     let cond, after_cond = parse_condition tokens
     let cases, unused = parse_cases [] after_cond
@@ -87,6 +134,9 @@ and parse_apply_tuple_w_paren tokens =
     not_implemented_err ()
 
 and parse_tuple first_xp tokens =
+    not_implemented_err ()
+
+and parse_apply first_xp tokens =
     not_implemented_err ()
 
 /// the main parse function
