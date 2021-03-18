@@ -1,0 +1,54 @@
+let num_iters n_qubits =
+    let n_items = pow 2 n_qubits in
+    let angle = asin ( / 1.0 ( sqrt num_qs ) ) in
+    floor ( / ( * 0.25 PI ) angle )
+in
+
+let reflect_about_xa inputs =
+    let output = new 0 in
+    let cx = controlled X in
+    let change_basis qubit = H (X qubit) in
+    let alting_X qs =
+        let do_for_each_q acc q =
+            match acc with
+            | count, sys -> 
+                match count % 2 with
+                | 0 -> ((+ count 1), (prepend (X q) sys))
+                | 1 -> ((+ count 1), (prepend q sys))
+        in
+        fold do_for_each_q (0, (System ())) qs
+    in
+    let mid_state = cx (alting_X inputs) (change_basis qubit) in
+    match mid_state with
+    | ctls, tgt -> 
+        let finished_ctls = alting_X ctls in
+        let finished_tgt = change_basis output in
+        output
+in
+
+let reflect_about_all_ones inputs =
+    match index -1 inputs with
+    | last, rest -> 
+        (controlled Z) rest last
+in
+
+let reflect_about_uniform inputs =
+    let change_basis qs = map X (prepare_uniform qs) in
+    change_basis (reflect_about_all_ones (change_basis inputs))
+in
+
+let search_for_all num_qs =
+    let qubits = (new_qubits num_qs) in
+    let uniform_qubits = map H qubits in
+    let iter_op qs = reflect_about_uniform (reflect_about_xa qs) in
+    let n_iters = range 0 (- (num_iters num_qs) 1) in
+    let do_for_each_iteration acc num = iter_op acc in
+    let final_state = 
+        fold do_for_each_iteration (0, uniform_qubits) n_iters 
+    in
+    let measure qs = M qs in
+    let results_pair = borrow measure final_state in
+    match results_pair with
+    | results, final_qubits -> 
+        let reset_qubits = reset_Z final_qubits in
+        results
