@@ -2,82 +2,93 @@
 
 - [X] ownership
 
-  > ok
+  > yes
   
 - [X] aliasing/borrowing
 
-  > ok
+  > - aliasing: yes
+  > - borrowing: add a new standard library function `borrow`
   
 - [x] high order function (`map`, `filter`, etc.)
 
-  > `map`, `fori`
+  > `map`, `fold`
+  >
+  > also use `range` to generate a set of indices. classical `for` loop can be achieved via `fold` + `range`
 
 - [x] array vs. tuple (composite system) notation
 
-  > use composite system (`<q1 . q2>`) and tuple for qubits, array for classical data
+  > use composite system and tuple for qubits, array for classical data
 
 - [x] ⊕ `xor` (high/low level? Quantum Fourier Transformation? )
 
-- boolean
+  > high level, consistent with Q#
 
-  > No
+- [x] boolean
+
+  > No, use integer `0` and anything instead
 
 - [X] indexing
 
-  > Normal style
+  > use `index` for only arrays
 
-- anonymous function
+- [x] anonymous function
 
   > No
 
-- user defined function
+- [x] user defined function
 
   > Yes
 
-- representation of tensor product
+- [x] representation of tensor product
 
-  > for `n <= 2`, use `<q1 . q2>`, otherwise use `map` orother collection ops
+  > - no literal. use `System` function (constructor) to construct a composite system. 
+  >
+  > - tensor product of unitary matrices is not supported (from syntax level)
 
-- recursion/mutually recursive
+- [x] recursion/mutually recursive
 
-  > No for now
+  > No for now. Very likely yes in the future
 
-- currying
+- [x] currying
 
-  > No
+  > Partial application is not allowed. Use wrappers instead
 
-- typing (explicit/implicit)
+- [x] typing (explicit/implicit)
 
-  > No
+  > No explicit typing. 
 
-- grammar style
+- [x] grammar style
 
-  > Racket style
+  > CAML style
 
-- claiming and disposing quantum resources
+- [ ] claiming and disposing quantum resources
 
-- [X] "cloning" qubit
+- [X] "cloning" qubit (creating entangling qubits with the same state)
 
   > don't use it
   
-- name
+- [x] name
 
   > probably F##Q
 
 - [X] call by name
 
-  > probably call-by-value
+  > no, call-by-value
 
-- deconstructor
+- [ ] deconstructor
 
-- pattern matching
+  > yes for tuple in `match` block, but needs further discussion
+
+- [ ] pattern matching
+
+  > yes for tuple in `match` block, but needs further discussion
 
 Needs inquiry:
 
 - whether to implement adjoint variant
 - how to verify a unitary operation programmatically
 - Hadamard sandwich
-- why Q# measures in Z not I
+- why Q# default `M` measures in Z not I
 
 # TODO
 
@@ -85,14 +96,23 @@ Needs inquiry:
   - [ ] support line comment
   - [ ] support string
   - [ ] full support of symbol lexing
+- [ ] parser
+  - [ ] apply
+  - [ ] tuple
+  - [x] other
+- [ ] interpreter
+  - [ ] qubit management
+  - [ ] `controlled` implementation
+  - [ ] `adjoint` implementation
+  - [x] other
+- [ ] standard library
+  - [ ] some necessary functions
 
 # Example code
 
-See `./Example/test.txt`
+See `./Example`
 
 # Notes
-
-The overall syntax is ML-like. 
 
 We use [F# XML documentation](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/xml-documentation)
 
@@ -111,7 +131,7 @@ There are 3 types of collections in this language:
 
 Some explanations: 
 
-- Arrays cannot include qubits because the no-cloning theorem: Once the qubit evolves via some unitary matrices, the new state exists in the form of function return value and is no longer an element of the array. This will leave a hole in the sequenced data structure, invalidating future enumeration operations. 
+- Arrays cannot include qubits because the no-cloning theorem: Once the qubit system (a subset of the array) evolves via some unitary matrices, the new state exists in the form of function return value and is no longer a subset of the array. This will leave holes in the sequenced data structure, invalidating future enumeration operations. 
 - Composite system cannot include classical data because it is a data structure specialized for quantum state evolvement. 
 
 In addition, there are differences between classical data and qubit: 
@@ -128,7 +148,7 @@ Some explanations:
 
   ```F#
   let q = qubit in
-  CNOT q qubit
+  	CNOT q qubit
   ```
 
   This will be a horrible error. 
@@ -145,14 +165,14 @@ For the formal definition of this block, please see the source code.
 
 ```F#
 let x = 0 in
-...
+	...
 ```
 
 #### Function declaration
 
 ```F#
 let id x = x in
-...
+	...
 ```
 
 #### Tuple deconstruction and multi-variable binding
@@ -161,21 +181,21 @@ The basic form is like this:
 
 ```F#
 let a, b = tuple in
-...
+	...
 ```
 
 However, it is also possible to use wildcard
 
 ```f#
 let a, _ = tuple in
-...
+	...
 ```
 
 And even further: 
 
 ```f#
 let _, _ = tuple in
-...
+	...
 ```
 
 > Note that the `in` keyword cannot be omitted. 
@@ -231,9 +251,9 @@ There are some peculiarities:
 
 - the language only supports the pattern matching of **tuple** and **scalar values**
 
-- the pattern should not wrapped in parenthesis. 
+- the pattern should not be wrapped in parenthesis. 
 
-- the pattern is not recursive, that is, 
+- the pattern is not recursive. For example: 
 
   ```f#
   match tuple with
@@ -242,5 +262,6 @@ There are some peculiarities:
 
   Is illegal
 
-- 
+
+
 
