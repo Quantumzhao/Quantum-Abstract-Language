@@ -34,8 +34,8 @@
         } elif (option == 2) {
             H(q);
         } elif (option == 3) {
-            H(q);
             X(q);
+            H(q);
         }
         return q;
     }

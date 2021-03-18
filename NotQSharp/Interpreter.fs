@@ -15,17 +15,18 @@ let rec find_variable env name =
 /// interprets the expression under the environment
 /// </summary>
 /// <param name="env">environment</param>
+/// <param name="qs">qubits pool</param>
 /// <param name="exp">expression</param>
-let rec interp env exp = 
+let rec interp env qs exp = 
     match exp with
     // interp values
     | Integer i -> Integer_Val i
     | Complex(m, a) -> Complex_Val(m, a)
     | Qubit q -> Qubit_Val q
     // interp collections
-    | Array exps -> interp_array env exps
-    | System qexps -> interp_system env qexps
-    | Tuple exps -> interp_tuple env exps
+    | Array exps -> interp_array env qs exps
+    | System qexps -> interp_system env qs qexps
+    | Tuple exps -> interp_tuple env qs exps
     // interp references
     | Variable v -> 
         match find_variable env v with
@@ -35,63 +36,63 @@ let rec interp env exp =
             | Some value -> value
             | None -> failwith $"{v} is not defined"
     // interp syntax structure
-    | Apply(func, args) -> interp_apply env func args
-    | Let_Fun(name, ps, body, in_expr) -> interp_let_fun env name ps body in_expr
-    | Let_Var(name, binding, in_expr) -> interp_let_var env name binding in_expr
-    | Match(cond, cases) -> interp_match env cond cases
+    | Apply(func, args) -> interp_apply env qs func args
+    | Let_Fun(name, ps, body, in_expr) -> interp_let_fun env qs name ps body in_expr
+    | Let_Var(name, binding, in_expr) -> interp_let_var env qs name binding in_expr
+    | Match(cond, cases) -> interp_match env qs cond cases
     | Unit -> Unit_Val
     | _ -> not_implemented_err ()
 
 // TODO: qubit support
-and interp_array env exps =
+and interp_array env qs exps =
     let result_vector = 
-        List.map (interp env) exps
+        List.map (interp env qs) exps
     in
     Array_Val result_vector
 
 // TODO: qubit support
-and interp_system env qexps =
+and interp_system env qs qexps =
     let result_vector =
-        List.map (interp env) qexps
+        List.map (interp env qs) qexps
     in
     System_Val result_vector
 
 // TODO: qubit support
-and interp_tuple env exps =
+and interp_tuple env qs exps =
     let result_vector =
-        List.map (interp env) exps
+        List.map (interp env qs) exps
     in
     Tuple_Val result_vector
 
 // TODO: qubit support
-and interp_let_fun env name ps body in_expr =
+and interp_let_fun env qs name ps body in_expr =
     // put all info into the reduced function without changing anything
     // since here it follows call by name
     let fun_red = Function_Red(name, ps, body)
     let new_env = (name, fun_red) :: env
-    interp new_env in_expr
+    interp new_env qs in_expr
 
 // TODO: qubit support
-and interp_let_var env name exp in_expr =
-    let res = interp env exp
+and interp_let_var env qs name exp in_expr =
+    let res = interp env qs exp
     let new_env = (name, res) :: env
-    interp new_env in_expr
+    interp new_env qs in_expr
 
 // not sure if it is compatible with qubits
-and interp_apply env func args =
+and interp_apply env qs func args =
     // whatever what the expression might be, evaluate it first
     // it may actually be a variable or expression, doesn't matter
-    let fun_red = interp env func
+    let fun_red = interp env qs func
     match fun_red with
     | Function_Red(name, ps, body) when ps.Length = args.Length -> 
         // first evaluate all the arguments
-        let eval'ed_args = List.map (interp env) args
+        let eval'ed_args = List.map (interp env qs) args
         // then pair them with parameters
         let param_arg_pair = List.zip ps eval'ed_args
         // pack into a set of environment
         // sorta hack, should replace it if there's any better way
         let new_env = List.append param_arg_pair param_arg_pair
-        interp new_env body
+        interp new_env qs body
     | Function_Red(_, ps, _) -> 
         failwith $"argument number mismatch: expect {ps.Length}, actual {args.Length}"
     | other when args.Length <> 0 -> 
@@ -100,7 +101,7 @@ and interp_apply env func args =
     | other -> other
 
 // TODO: qubit support
-and interp_match env cond cases =
+and interp_match env qs cond cases =
     // cond: condition
     let rec interp_match_rec env cond cases =
         match cases, cond with
@@ -116,10 +117,10 @@ and interp_match env cond cases =
                 // put the value of condition expression in the environment
                 let new_env = (p, cond) :: env
                 // evaluate the branch
-                interp new_env expr
-            | WildCard -> interp env expr
-            | Int_Lit i when cond = Integer_Val i -> interp env expr
-            | Comp_Lit m when cond = Complex_Val(m, 0m) -> interp env expr
+                interp new_env qs expr
+            | WildCard -> interp env qs expr
+            | Int_Lit i when cond = Integer_Val i -> interp env qs expr
+            | Comp_Lit m when cond = Complex_Val(m, 0m) -> interp env qs expr
             // if no match, jump to next
             | _ -> interp_match_rec env cond rest
         // when the pattern is a tuple and the condition returns a tuple as well
@@ -154,11 +155,11 @@ and interp_match env cond cases =
                     let matched_pairs = List.foldBack fill_in_pattern p_v_pair []
                     // add them to th environment
                     let new_env = List.append matched_pairs env
-                    interp new_env expr
+                    interp new_env qs expr
                 else
                     // otherwise jump to next
                     interp_match_rec env cond rest_c
         | _, _ -> 
          failwith $"{cond} currently is not supoorted in pattern matching"
     // ----| starts here |----
-    interp_match_rec env (interp env cond) cases
+    interp_match_rec env (interp env qs cond) cases

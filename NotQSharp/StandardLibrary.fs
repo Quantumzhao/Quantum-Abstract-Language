@@ -5,6 +5,7 @@ open Helper
 open DecimalMath
 open QuantumLib
 open TypeDef
+open Microsoft.Quantum.Canon
 
 // TODO: 
 // map: the familiar map. (a' -> b') -> a' list -> b' list
@@ -41,8 +42,11 @@ let find_any name =
         | None -> None
 
 let new_qubits n sim =
+    // a QArray of Q# qubits
     let q_array = ClaimQubits.Run(sim, int64 n).Result
+    // an F# list of my qubits
     let proc'ed_arr = List.map Qubit_Val (arr_2_lst q_array)
+    // a system of my qubits
     System_Val proc'ed_arr
 
 let new_qubit option sim =
@@ -53,4 +57,29 @@ let new_qubit option sim =
         | Plus -> ClaimQubit.Run(sim, 2L).Result
         | Minus -> ClaimQubit.Run(sim, 3L).Result
     Qubit_Val qubit
+
+// gives off a binary vector space of rank n
+// n -> {0, 1}ⁿ
+let bin_vec_space rank =
+    let rec bin_vec_space_rec rank =
+        if rank <= 0 then
+            failwith $"illegal rank: {rank} must be greater than 0"
+        elif rank = 1 then
+            // the base case, consists of only single bit 1 or 0
+            [[0]; [1]]
+        else
+            // suppose there is a subspace of rank n - 1
+            // then add another degree of freedom to make it rank n
+            let sub_space = bin_vec_space_rec (rank - 1)
+            let group0 = List.map (fun v -> 0 :: v) sub_space
+            let group1 = List.map (fun v -> 1 :: v) sub_space
+            List.append group0 group1
+    // code below is just: `int list list` to `Array(Array(Integer))`
+    let int_list_to_Int_list lst =
+        List.map Integer_Val lst
+    let flist_to_my_list vec =
+        Array_Val (List.map (fun v -> Array_Val (int_list_to_Int_list v)) vec)
+    match rank with
+    | Integer_Val i -> flist_to_my_list (bin_vec_space_rec i)
+    | _ -> invalidArg "rank" "rank must be an integer"
 
