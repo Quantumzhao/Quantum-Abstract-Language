@@ -40,22 +40,28 @@
         return q;
     }
 
-    operation Hadamard(target : Qubit) : Qubit {
+    operation Hadamard (target : Qubit) : Qubit {
         H(target);
         return target;
     }
 
-    operation Pauli_X(target: Qubit) : Qubit {
+    operation Pauli_X (target: Qubit) : Qubit {
         X(target);
         return target;
     }
 
-    operation Pauli_Z(target: Qubit) : Qubit {
+    operation Controlled_Pauli_X (controls: Qubit[], target: Qubit) 
+    : (Qubit[], Qubit) {
+        ApplyCNOTChainWithTarget(controls, target);
+        return (controls, target);
+    }
+
+    operation Pauli_Z (target: Qubit) : Qubit {
         Z(target);
         return target;
     }
 
-    operation Measure(target: Qubit) : Result {
+    operation Measure (target: Qubit) : Result {
         return M(target);
     }
 }
