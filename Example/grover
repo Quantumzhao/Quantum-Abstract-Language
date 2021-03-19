@@ -1,6 +1,6 @@
 let num_iters n_qubits =
     let n_items = pow 2 n_qubits in
-    let angle = asin ( / 1.0 ( sqrt num_qs ) ) in
+    let angle = asin ( / 1.0 ( sqrt n_items ) ) in
     floor ( / ( * 0.25 PI ) angle )
 in
 
@@ -52,3 +52,4 @@ let search_for_all num_qs =
     | results, final_qubits -> 
         let reset_qubits = reset_Z final_qubits in
         results
+        
