@@ -3,6 +3,7 @@ module Interpreter
 open TypeDef
 open Helper
 open StandardLibrary
+open Microsoft.Quantum.Simulation.Simulators
 
 // TODO: qubit support
 let rec find_variable env name =

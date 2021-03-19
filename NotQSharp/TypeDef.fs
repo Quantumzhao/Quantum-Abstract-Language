@@ -20,20 +20,24 @@ type Expr =
     // probably useless
     | String of string
     | Unit
-    /// normal values, qubits and functions
+    // normal values, qubits and functions
     | Variable of string
-    /// Note that the function 
-    /// can also be a return value from an expression
+    // Note that the function 
+    // can also be a return value from an expression
     | Apply of func: Expr * arguments: Expr list
-    /// let binding of a variable
+    // let binding of a variable
     | Let_Var of name: string * body: Expr * In: Expr
-    /// let binding of a function
+    // let binding of a function
     | Let_Fun of name: string * paras: string list * body: Expr * In: Expr
     | Match of condition: Expr * cases: (Pattern list * Expr) list
+    // is not an AST node; 
+    // it can only be a return value from expressions
     | Array of Expr list
-    /// fixed number of expressions, supports pattern matching
+    // fixed number of expressions, supports pattern matching
     | Tuple of Expr list
-    /// can only contain qubits
+    // can only contain qubits
+    // is not an AST node; 
+    // it can only be a return value from expressions
     | System of Expr list
     | Qubit of Qubit
 

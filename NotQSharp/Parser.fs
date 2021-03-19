@@ -4,6 +4,24 @@ open TokDef
 open TypeDef
 open Helper
 
+(*  Expr ::= 
+    | Let_Var
+    | Let_Fun
+    | Match
+    | Apply
+    | Structure
+
+    Structure ::=
+    | Tuple
+    | Atom
+
+    Atom ::=
+    | Integer
+    | Unit
+    | Variable
+    | Qubit
+*)
+
 let rec parse_let tokens : Expr * Token list =
     let rec parse_params (finished: string list)  (tokens: Token list) 
         : (string list * Token list) =
@@ -130,24 +148,54 @@ and parse_decimal tokens =
 
 /// parse any expression related to parenthesis,
 /// also include apply and tuple
-and parse_apply_tuple_w_paren tokens =
-    not_implemented_err ()
+and parse_apply_tuple tokens =
+    let expr, rest = parse tokens
+    match rest with
+    | Comma :: remain -> parse_tuple expr remain
+    | _ -> parse_apply expr rest
 
 and parse_tuple first_xp tokens =
-    not_implemented_err ()
+    let rec parse_tuple_more finished tokens =
+        let item, rest = parse tokens
+        match rest with
+        | Comma :: _ -> 
+            let items, rest' = parse_tuple_more finished rest
+            item :: items, rest'
+        | RParen :: _ -> item :: finished, rest
+        | other -> syntax_err Comma other
+    let finished, unused = parse_tuple_more [] tokens
+    Tuple(first_xp :: finished), unused
 
 and parse_apply first_xp tokens =
-    not_implemented_err ()
+    let rec parse_apply_args finished tokens =
+        let arg, rest = parse tokens
+        match rest with
+        | Identifier _ :: _
+        | TokDef.Integer _ :: _
+        | Decimal _ :: _
+        | LParen :: _ -> 
+            let args, rest' = parse_apply_args finished rest
+            arg :: args, rest'
+        | _ -> arg :: finished, rest
+    let finished, unused = parse_apply_args [] tokens
+    Apply(first_xp, finished), unused
+
+and parse_paren tokens =
+    let expr, rest = parse_apply_tuple tokens
+    match rest with
+    | RParen :: unused -> expr, unused
+    | other -> syntax_err RParen other
 
 /// the main parse function
 and parse tokens : Expr * Token list =
     match tokens with
     // there is no expression
     | [] -> (Unit, [])
+    | LParen :: rest -> parse_paren rest
     | Let :: _ -> parse_let tokens
     | TokDef.Match :: _ -> parse_match tokens
     | TokDef.Integer _ :: _ -> parse_integer tokens
     | Decimal _ :: _ -> parse_decimal tokens
     | Identifier id :: rest -> Variable id, rest
-    | _ -> not_implemented_err ()
+    | _ -> parse_apply_tuple tokens
 
