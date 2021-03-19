@@ -4,6 +4,7 @@ open TypeDef
 open Helper
 open StandardLibrary
 open Microsoft.Quantum.Simulation.Simulators
+open Microsoft.Quantum.Simulation.Core
 
 // TODO: qubit support
 let rec find_variable env name =
@@ -23,7 +24,7 @@ let rec interp env qs exp =
     // interp values
     | Integer i -> Integer_Val i
     | Complex(m, a) -> Complex_Val(m, a)
-    | Qubit q -> Qubit_Val q
+    | Qubit(q, b) -> Qubit_Val(q, b)
     // interp collections
     | Array exps -> interp_array env qs exps
     | System qexps -> interp_system env qs qexps

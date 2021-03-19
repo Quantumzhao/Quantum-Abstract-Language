@@ -41,7 +41,7 @@ type Expr =
     // is not an AST node; 
     // it can only be a return value from expressions
     | System of Expr list
-    | Qubit of Qubit
+    | Qubit of Qubit * is_available: bool
 
 type Value = 
     | Unit_Val
@@ -52,7 +52,7 @@ type Value =
     /// value can only be qubits
     | System_Val of Value list
     | Tuple_Val of Value list
-    | Qubit_Val of Qubit
+    | Qubit_Val of Qubit * is_available: bool
     /// function as a value (include complete definition and body).
     /// Short for reduced function. Just a fancy name, nothing else
     | Function_Red of string * string list * Expr
