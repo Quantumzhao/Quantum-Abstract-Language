@@ -84,8 +84,8 @@ and interp_let_var env qs name exp in_expr =
 and interp_apply env qs func args =
     // whatever what the expression might be, evaluate it first
     // it may actually be a variable or expression, doesn't matter
-    let fun_red = interp env qs func
-    match fun_red with
+    let id = interp env qs func
+    match id with
     | Function_Red(name, ps, body) when ps.Length = args.Length -> 
         // first evaluate all the arguments
         let eval'ed_args = List.map (interp env qs) args

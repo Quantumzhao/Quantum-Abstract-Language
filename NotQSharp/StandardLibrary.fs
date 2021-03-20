@@ -17,6 +17,9 @@ open Microsoft.Quantum.Canon
 // trim: remove all the empty holes in a qubits set left by any indexing or accessing operations
 //       System -> System
 
+let private too_many_args_err (expect: int) (actual_arg_list: Value list) =
+    syntax_err $"{expect} args" $"{actual_arg_list.Length} args"
+
 let PI = Complex_Val(DecimalEx.Pi, 0m)
 
 let E = Complex_Val(DecimalEx.E, 0m)
@@ -30,7 +33,7 @@ let find_variable name =
     | "I" -> Some I
     | _ -> None
 
-let arg_real_check a = a = 0m || a = 1m || a = -1m
+let private arg_real_check a = a = 0m || a = 1m || a = -1m
 
 let add interp_w_env e1 e2 =
     let var1 = interp_w_env e1
@@ -70,26 +73,51 @@ let to_complex interp_w_env num =
     | Complex_Val(m, a) -> Complex_Val(m, a)
     | other -> invalidArg "number" $"cannot cast {other} to integer"
 
-let new_qubits n sim =
-    // a QArray of Q# qubits
-    let q_array = ClaimQubits.Run(sim, int64 n).Result
-    // an F# list of my qubits
-    let proc'ed_arr = List.map Qubit_Val (arr_2_lst q_array)
-    // a system of my qubits
-    System_Val proc'ed_arr
+// =============== Quantum Part ==================
+// require refactor in the future
 
-let new_qubit option sim =
-    let qubit =
-        match option with
-        | Zero -> ClaimQubit.Run(sim, 0L).Result
-        | One -> ClaimQubit.Run(sim, 1L).Result
-        | Plus -> ClaimQubit.Run(sim, 2L).Result
-        | Minus -> ClaimQubit.Run(sim, 3L).Result
-    Qubit_Val qubit
+let private new_qubits arg sim =
+    match arg with
+    | Integer_Val n :: [] -> 
+        // a QArray of Q# qubits
+        let q_array = ClaimQubits.Run(sim, int64 n).Result
+        // an F# list of my qubits
+        let proc'ed_arr = List.map Qubit_Val (arr_2_lst q_array)
+        // a system of my qubits
+        System_Val proc'ed_arr
+    | _ -> too_many_args_err 1 arg
+
+let private new_qubit args sim =
+    match args with
+    | Integer_Val option :: [] -> 
+        let qubit = ClaimQubit.Run(sim, int64 option).Result
+        Qubit_Val qubit
+    | _ -> too_many_args_err 1 args
+
+let private measure args sim =
+    match args with
+    | Qubit_Val q :: [] -> 
+        let res = Measure.Run(sim, q).Result
+        if res = Result.One then Integer_Val 1
+        else Integer_Val 0
+    | _ -> too_many_args_err 1 args
+
+let private basic_gate code arg sim =
+    match arg with
+    | Qubit_Val q :: [] -> 
+        match code with
+        | "H" -> Qubit_Val (Hadamard.Run(sim, q).Result)
+        | "X" -> Qubit_Val (Pauli_X.Run(sim, q).Result)
+        | "Y" -> Qubit_Val (Pauli_Y.Run(sim, q).Result)
+        | "Z" -> Qubit_Val (Pauli_Z.Run(sim, q).Result)
+        | _ -> invalidArg "code" "no, it can't, it's surreal"
+    | _ -> too_many_args_err 1 arg
+
+// =================== Quantum Part Ends ======================
 
 // gives off a binary vector space of rank n
 // n -> {0, 1}ⁿ
-let bin_vec_space rank =
+let private bin_vec_space rank =
     let rec bin_vec_space_rec rank =
         if rank <= 0 then
             failwith $"illegal rank: {rank} must be greater than 0"
@@ -123,3 +151,14 @@ let find_any name =
         match find_func name with
         | Some value -> Some value
         | None -> None
+
+let call_by_value sim interp_w_env name args =
+    let values = List.map interp_w_env args
+    match name with
+    | "new" -> new_qubit values sim
+    | "Qubits" -> new_qubits values sim
+    | "H" | "X" | "Y" | "Z" -> basic_gate name values sim
+    | _ -> not_implemented_err ()
+    
+let call_by_name sim interp_w_env name args =
+    not_implemented_err ()

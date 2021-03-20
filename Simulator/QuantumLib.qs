@@ -56,6 +56,11 @@
         return (controls, target);
     }
 
+    operation Pauli_Y (target: Qubit) : Qubit {
+        Y(target);
+        return target;
+    }
+
     operation Pauli_Z (target: Qubit) : Qubit {
         Z(target);
         return target;
