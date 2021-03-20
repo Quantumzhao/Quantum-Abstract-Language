@@ -1,5 +1,6 @@
-let x = 2 in
-    match x with
-    | 1 -> 0
-    | 0 -> 1
-    | _ -> I
+let id x = x in
+    let q = ( new 0 ) in
+    match ( measure q ) with
+    | 1 -> 1
+    | 0 -> 0
+    | _ -> i
