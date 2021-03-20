@@ -1,0 +1,5 @@
+let ctl = ( h ( new 0 ) ) in
+let tgt = ( new 0 ) in
+match ( cx ctl tgt ) with
+| newctl , newtgt -> 
+( ( measure newctl ) , ( measure newtgt ) )
