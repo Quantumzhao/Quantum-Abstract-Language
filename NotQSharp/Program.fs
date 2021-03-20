@@ -14,10 +14,11 @@ open Interpreter
 [<EntryPoint>]
 let main argv =
     let dir = Directory.GetCurrentDirectory()
-    let tokens = lexer (dir + "/../Example/match")
+    let tokens = lexer (dir + "/../Example/bell state")
     let expr, _ = parse tokens
-    let res = interp [] [] expr
-    Console.WriteLine "Hello"
+    use sim = new QuantumSimulator()
+    let res = interp [] sim expr
+    // Console.WriteLine "Hello"
     Console.WriteLine (pretty_print tokens)
     Console.WriteLine (pretty_draw expr)
     Console.WriteLine res

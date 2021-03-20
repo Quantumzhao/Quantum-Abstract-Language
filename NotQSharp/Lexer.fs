@@ -35,7 +35,7 @@ let match_num_id string =
     match string with
     | Match "[0-9]+\.[0-9]+" string -> Decimal (decimal string)
     | Match "[0-9]+" string -> Integer (int string)
-    | Match "[a-z]|[A-Z]([a-z]*[A-Z]*[0-9]*)*" string -> Identifier string
+    | Match "[a-z]+[A-Z]*[0-9]*" string -> Identifier string
     | _ -> failwith (format_err string)
 
 /// just match rules

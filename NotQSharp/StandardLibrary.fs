@@ -7,6 +7,7 @@ open QuantumLib
 open TypeDef
 open DecimalMath
 open Microsoft.Quantum.Canon
+open Microsoft.Quantum.Simulation.Simulators
 
 // TODO: 
 // map: the familiar map. (a' -> b') -> a' list -> b' list
@@ -20,30 +21,32 @@ open Microsoft.Quantum.Canon
 let private too_many_args_err (expect: int) (actual_arg_list: Value list) =
     syntax_err $"{expect} args" $"{actual_arg_list.Length} args"
 
-let PI = Complex_Val(DecimalEx.Pi, 0m)
+let private pi = Complex_Val(DecimalEx.Pi, 0m)
 
-let E = Complex_Val(DecimalEx.E, 0m)
+let private e = Complex_Val(DecimalEx.E, 0m)
 
-let I = Complex_Val(1m, DecimalEx.Pi)
+let private i = Complex_Val(1m, DecimalEx.Pi)
 
-let find_variable name =
+let public find_variable name =
     match name with
-    | "PI" -> Some PI
-    | "E" -> Some E
-    | "I" -> Some I
+    | "pi" -> Some pi
+    | "e" -> Some e
+    | "i" -> Some i
     | _ -> None
 
 let private arg_real_check a = a = 0m || a = 1m || a = -1m
 
-let add interp_w_env e1 e2 =
-    let var1 = interp_w_env e1
-    let var2 = interp_w_env e2
-    match var1, var2 with
-    | Integer_Val i1, Integer_Val i2 -> Integer_Val(i1 + i2)
-    | Complex_Val(m1, a1), Complex_Val(m2, a2) -> 
-        if a1 = 0m && a2 = 0m then
+let private add args =
+    match args with
+    // integer addition
+    | Integer_Val i1 :: Integer_Val i2 :: [] -> Integer_Val(i1 + i2)
+    | Complex_Val(m1, a1) :: Complex_Val(m2, a2) :: [] -> 
+        // real addition
+        if arg_real_check a1 && arg_real_check a2 then
             Complex_Val (m1 + m2, 0m)
-        else // why would anyone do this
+        // complex addition
+        // why would anyone want to do this ?
+        else
             let argand_to_cartesian m a =
                 m * DecimalEx.Cos (a * DecimalEx.Pi), m * DecimalEx.Sin (a * DecimalEx.Pi)
             let r1, i1 = argand_to_cartesian m1 a1
@@ -53,10 +56,13 @@ let add interp_w_env e1 e2 =
             let m = DecimalEx.Sqrt (r * r + i * i)
             let a = DecimalEx.ATan (i / r) / DecimalEx.Pi
             Complex_Val(m, a)
-    | Complex_Val(m1, a1), Integer_Val i when arg_real_check a1 -> not_implemented_err ()
-    | Integer_Val i, Complex_Val(m2, a2) when arg_real_check a2 -> not_implemented_err ()
-    | other1, other2 -> 
+    | Complex_Val(m1, a1) :: Integer_Val i :: [] when arg_real_check a1 -> 
+        not_implemented_err ()
+    | Integer_Val i :: Complex_Val(m2, a2) :: [] when arg_real_check a2 -> 
+        not_implemented_err ()
+    | other1 :: other2 :: [] -> 
         invalidArg "expression 1 or expression 2" $"cannot cast either {other1} or {other2} to integer"
+    | _ -> too_many_args_err 2 args
 
 let to_int interp_w_env c =
     match interp_w_env c with
@@ -87,10 +93,11 @@ let private new_qubits arg sim =
         System_Val proc'ed_arr
     | _ -> too_many_args_err 1 arg
 
-let private new_qubit args sim =
+let private new_qubit args (sim: QuantumSimulator) =
     match args with
     | Integer_Val option :: [] -> 
-        let qubit = ClaimQubit.Run(sim, int64 option).Result
+        //let qubit = ClaimQubit.Run(sim, int64 option).Result
+        let qubit = sim.QubitManager.Allocate()
         Qubit_Val qubit
     | _ -> too_many_args_err 1 args
 
@@ -106,10 +113,16 @@ let private basic_gate code arg sim =
     match arg with
     | Qubit_Val q :: [] -> 
         match code with
-        | "H" -> Qubit_Val (Hadamard.Run(sim, q).Result)
-        | "X" -> Qubit_Val (Pauli_X.Run(sim, q).Result)
-        | "Y" -> Qubit_Val (Pauli_Y.Run(sim, q).Result)
-        | "Z" -> Qubit_Val (Pauli_Z.Run(sim, q).Result)
+        | "h" -> Qubit_Val (Hadamard.Run(sim, q).Result)
+        | "px" -> Qubit_Val (Pauli_X.Run(sim, q).Result)
+        | "py" -> Qubit_Val (Pauli_Y.Run(sim, q).Result)
+        | "pz" -> Qubit_Val (Pauli_Z.Run(sim, q).Result)
+        | _ -> invalidArg "code" "no, it can't, it's surreal"
+    | Qubit_Val ctl :: Qubit_Val tgt :: [] -> 
+        match code with
+        | "cx" -> 
+            let struct(ctl', tgt') = Controlled_Pauli_X.Run(sim, ctl, tgt).Result
+            Tuple_Val [Qubit_Val ctl'; Qubit_Val tgt']
         | _ -> invalidArg "code" "no, it can't, it's surreal"
     | _ -> too_many_args_err 1 arg
 
@@ -140,25 +153,16 @@ let private bin_vec_space rank =
     | Integer_Val i -> flist_to_my_list (bin_vec_space_rec i)
     | _ -> invalidArg "rank" "rank must be an integer"
 
-let find_func name =
+let public call sim (interp_w_env: Expr -> Value) name args =
+    // call by name
     match name with
-    | _ -> None
-
-let find_any name =
-    match find_variable name with
-    | Some value -> Some value
-    | None -> 
-        match find_func name with
-        | Some value -> Some value
-        | None -> None
-
-let call_by_value sim interp_w_env name args =
-    let values = List.map interp_w_env args
-    match name with
-    | "new" -> new_qubit values sim
-    | "Qubits" -> new_qubits values sim
-    | "H" | "X" | "Y" | "Z" -> basic_gate name values sim
-    | _ -> not_implemented_err ()
-    
-let call_by_name sim interp_w_env name args =
-    not_implemented_err ()
+    | _ -> 
+        // call by value
+        let values = List.map interp_w_env args
+        match name with
+        | "add" -> add values
+        | "new" -> new_qubit values sim
+        | "Qubits" -> new_qubits values sim
+        | "measure" -> measure values sim
+        | "h" | "px" | "py" | "pz" | "cx" -> basic_gate name values sim
+        | _ -> not_implemented_err ()

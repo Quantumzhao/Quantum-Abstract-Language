@@ -50,10 +50,10 @@
         return target;
     }
 
-    operation Controlled_Pauli_X (controls: Qubit[], target: Qubit) 
-    : (Qubit[], Qubit) {
-        ApplyCNOTChainWithTarget(controls, target);
-        return (controls, target);
+    operation Controlled_Pauli_X (control: Qubit, target: Qubit) 
+    : (Qubit, Qubit) {
+        CNOT(control, target);
+        return (control, target);
     }
 
     operation Pauli_Y (target: Qubit) : Qubit {
