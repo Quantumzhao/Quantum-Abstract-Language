@@ -95,7 +95,9 @@ Needs inquiry:
 - [ ] a fully functional lexer
   - [ ] support line comment
   - [ ] support string
-  - [ ] full support of symbol lexing
+  - [x] full support of symbol lexing
+  - [ ] no need for space bewteen tokens
+  - [ ] regexp support for identifier with underline and numbers
 - [ ] parser
   - [ ] apply
   - [ ] tuple
