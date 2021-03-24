@@ -12,11 +12,8 @@ open Microsoft.Quantum.Simulation.Simulators
 // TODO: 
 // map: the familiar map. (a' -> b') -> a' list -> b' list
 // fold: the familiar fold. (a' -> b' -> a') -> a' -> b' list -> a'
-// range: returns a range from some int to some int
 // borrow: borrows a set of qubits, do some operations, and then return the qubits back to the set
 //         (System -> a') -> System -> System * a'
-// trim: remove all the empty holes in a qubits set left by any indexing or accessing operations
-//       System -> System
 
 let private too_many_args_err (expect: int) (actual_arg_list: Value list) =
     syntax_err $"{expect} args" $"{actual_arg_list.Length} args"
@@ -82,17 +79,18 @@ let to_complex interp_w_env num =
 // =============== Quantum Part ==================
 // require refactor in the future
 
-let private new_qubits arg sim =
+let private new_qubits arg (sim: QuantumSimulator) =
     match arg with
     | Integer_Val n :: [] -> 
         // a QArray of Q# qubits
-        let q_array = ClaimQubits.Run(sim, int64 n).Result
+        let q_array = sim.QubitManager.Allocate(int64 n)
         // an F# list of my qubits
         let proc'ed_arr = List.map Qubit_Val (arr_2_lst q_array)
         // a system of my qubits
         System_Val proc'ed_arr
     | _ -> too_many_args_err 1 arg
 
+// only for testing
 let private new_qubit args (sim: QuantumSimulator) =
     match args with
     | Integer_Val option :: [] -> 
@@ -150,8 +148,66 @@ let private bin_vec_space rank =
     let flist_to_my_list vec =
         Array_Val (List.map (fun v -> Array_Val (int_list_to_Int_list v)) vec)
     match rank with
-    | Integer_Val i -> flist_to_my_list (bin_vec_space_rec i)
+    | Integer_Val i :: [] -> flist_to_my_list (bin_vec_space_rec i)
     | _ -> invalidArg "rank" "rank must be an integer"
+
+let range args =
+    let rec generate_range start end' step finished =
+        if start <= end' && end' <= (start + step) then
+            start :: finished
+        else
+            start :: (generate_range (start + step) end' step finished)
+    match args with
+    | Integer_Val start :: Integer_Val end' :: Integer_Val step :: [] -> 
+        let list = generate_range start end' step []
+        Array_Val (List.map Integer_Val list)
+    | Integer_Val start :: Integer_Val end' :: [] -> 
+        let list = generate_range start end' 1 []
+        Array_Val (List.map Integer_Val list)
+    | Integer_Val end' :: [] -> 
+        let list = generate_range 0 end' 1 []
+        Array_Val (List.map Integer_Val list)
+    | _ -> too_many_args_err 3 args
+
+let head args =
+    match args with
+    | Array_Val (head :: _) :: [] -> head
+    | System_Val (head :: _) :: [] -> head
+    | _ -> too_many_args_err 1 args
+
+let tail args =
+    match args with
+    | Array_Val a :: [] -> Array_Val a.Tail
+    | System_Val s :: [] -> System_Val s.Tail
+    | _ -> too_many_args_err 1 args
+
+let last args =
+    match args with
+    | Array_Val a :: [] -> 
+        let rec get_last arr =
+            match arr with
+            | [] -> invalidArg "array" "empty array"
+            | last :: [] -> last
+            | _ :: tl -> get_last tl
+        get_last a
+    | System_Val s :: [] -> not_implemented_err ()
+    | _ -> too_many_args_err 1 args
+
+let split args =
+    match args with
+    | Integer_Val i :: Array_Val a :: [] -> 
+        let t1, t2 = List.splitAt i a
+        Tuple_Val [Array_Val t1; Array_Val t2]
+    | Integer_Val i :: System_Val s :: [] -> 
+        not_implemented_err ()
+    | _ -> too_many_args_err 2 args
+
+let index args =
+    match args with
+    | Integer_Val i :: Array_Val a :: [] -> a.Item i
+    | Integer_Val i :: System_Val s :: [] -> 
+        not_implemented_err ()
+    | _ -> too_many_args_err 2 args
 
 let public call sim (interp_w_env: Expr -> Value) name args =
     // call by name
@@ -161,6 +217,11 @@ let public call sim (interp_w_env: Expr -> Value) name args =
         let values = List.map interp_w_env args
         match name with
         | "add" -> add values
+        | "bin_vec_space" -> bin_vec_space values
+        | "head" -> head values
+        | "tail" -> tail values
+        | "last" -> last values
+        | "range" -> range values
         | "new" -> new_qubit values sim
         | "Qubits" -> new_qubits values sim
         | "measure" -> measure values sim
