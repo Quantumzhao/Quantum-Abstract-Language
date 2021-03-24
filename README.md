@@ -23,21 +23,9 @@
 
   > high level, consistent with Q#
 
-- [x] boolean
-
-  > No, use integer `0` and anything instead
-
 - [X] indexing
 
   > use `index` for only arrays
-
-- [x] anonymous function
-
-  > No
-
-- [x] user defined function
-
-  > Yes
 
 - [x] representation of tensor product
 
@@ -49,19 +37,13 @@
 
   > No for now. Very likely yes in the future
 
-- [x] currying
-
-  > Partial application is not allowed. Use wrappers instead
-
-- [x] typing (explicit/implicit)
-
-  > No explicit typing. 
-
 - [x] grammar style
 
   > CAML style
 
-- [ ] claiming and disposing quantum resources
+- [X] claiming and disposing quantum resources
+
+  > do it
 
 - [X] "cloning" qubit (creating entangling qubits with the same state)
 
@@ -75,13 +57,6 @@
 
   > no, call-by-value
 
-- [ ] deconstructor
-
-  > yes for tuple in `match` block, but needs further discussion
-
-- [ ] pattern matching
-
-  > yes for tuple in `match` block, but needs further discussion
 
 Needs inquiry:
 
@@ -96,9 +71,9 @@ Needs inquiry:
   - [ ] support line comment
   - [ ] support string
   - [ ] full support of symbol lexing
-- [ ] parser
-  - [ ] apply
-  - [ ] tuple
+- [x] parser
+  - [X] apply
+  - [X] tuple
   - [x] other
 - [ ] interpreter
   - [ ] qubit management
@@ -114,7 +89,75 @@ See `./Example`
 
 # Notes
 
+## Introduction
+
+This is a quantum functional programming language, inspired by the theory of Quantum Lambda Calculus developed by Sir Selinger. Since it is a proof-of-concept language experimenting some novel ideas present in the realm, we decide to preserve its simplicity by removing all syntactic sugar and non-critical syntax support that are common to many existing functional PLs. 
+
+For example, the following common features are missing: 
+
+- anonymous function
+
+  > Every function should be declared with a name
+
+- partial application
+
+  > You must use a wrapper function to apply some of the arguments
+
+- Boolean data type
+
+  > `0` means `false` and `1` means `true`
+
+- type system
+
+  > Types still exist, but there is no way of explicitly declaring a variable as a certain type. Also, application and function signatures don't enforce type checking
+
+- pattern matching
+
+  > Actually it supports a subset of ML style pattern matching
+
+However, it does have good support for quantum data types and qubit operations, which will be discussed in detail in the following sections. 
+
 We use [F# XML documentation](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/xml-documentation)
+
+### No-cloning Theorem
+
+Despite the syntax being similar to classical ML style language, our language is fundamentally different from these. 
+
+Due to the presence of no-cloning theorem, we have to redesign even the most basic data structures (for example, tuples and arrays) in order to circumvent the constrains and keep the functional programming semantics in many functions and high order functions. 
+
+For instance, consider the following code snippet: 
+
+```F#
+let qubit' = qubit in
+...
+```
+
+Unlike classical data assignment, `qubit` becomes inaccessible after this operation. The reason is that we have to keep track of the references of qubit variables (pointers), so that no quantum variables may point to the same quantum resource. 
+
+Otherwise,  disastrous scenarios like this may happen:
+
+```F#
+let q = qubit in
+	CNOT q qubit
+```
+
+The `CNOT` gate operates on two same qubits which is unthinkable in quantum computing. 
+
+Or something slightly less worse: 
+
+```F#
+let qubit' = X qubit in
+let qubit'' = qubit in
+...
+```
+
+Since `qubit ` value has been changed since line 1, another access may get a different value than the origin value of `qubit`. This is especially unacceptable in functional programming since it implies implicit mutable variables. 
+
+Therefore we take the approach of linearity, which means no variables are allowed to use twice. 
+
+> Note that this is quite different as what descried in Sir Selinger's *Quantum Lambda Calculus* and *Quipper* language, because we think creating an entangled pair with the same state to immitate the "cloning" operation is not a good idea. 
+
+This leads to a profound shift in our language design. 
 
 ## Data Structure
 
@@ -141,17 +184,6 @@ In addition, there are differences between classical data and qubit:
 | Unitary transformation | Undefined      | Yes   |
 | Classical function     | Yes            | No    |
 | Re-useable             | Yes            | No    |
-
-Some explanations: 
-
-- qubits are not re-usable due to no-cloning theorem. For example, 
-
-  ```F#
-  let q = qubit in
-  	CNOT q qubit
-  ```
-
-  This will be a horrible error. 
 
 ## Blocks
 
