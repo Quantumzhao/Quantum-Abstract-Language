@@ -207,7 +207,8 @@ and parse tokens : Expr * Token list =
     | LParen :: rest -> parse_paren rest
     | Let :: _ -> parse_let tokens
     | TokDef.Match :: _ -> parse_match tokens
-    | TokDef.Integer _ :: _ -> parse_integer tokens
+    | TokDef.Integer i :: rest -> Integer i, rest 
     | Decimal _ :: _ -> parse_decimal tokens
     | Identifier id :: rest -> Variable id, rest
+    | TokDef.String str :: rest -> String str, rest
     | _ -> parse_apply_tuple tokens

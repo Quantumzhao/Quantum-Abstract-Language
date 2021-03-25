@@ -4,9 +4,6 @@ open System
 open System.IO
 open System.Text.RegularExpressions
 open TokDef
-open Helper
-
-let format_err id = failwith $"invalid format {id}"
 
 /// <summary>
 /// cut the src code file into fragments according to space characters
@@ -50,6 +47,7 @@ let tok inputraw =
             let Equal_m = Regex("=").Match(input, 0, 1)
             let Comma_m = Regex(",").Match(input, 0, 1)
             let Comment_m = Regex("^\/\/\s*\S+.*?\n").Match(input)
+            let String_m = Regex("^\".*\"").Match(input)
 
 
             // Tokenizing string recursively.
@@ -57,10 +55,10 @@ let tok inputraw =
             if (Space_m.Success) then
                 tokenize (input.Substring(1)) (pos + 1)
             elif (Decimal_m.Success) then
-                Decimal(Convert.ToDecimal Decimal_m.Value)
+                Decimal(decimal Decimal_m.Value)
                 :: (tokenize (input.Substring(Decimal_m.Value.Length)) (pos + Decimal_m.Value.Length))
             elif (Integer_m.Success) then
-                (Integer(Int32.Parse(Integer_m.Value)))
+                (Integer(int Integer_m.Value))
                 :: (tokenize (input.Substring(Integer_m.Value.Length)) (pos + Integer_m.Value.Length))
             elif (Mis_m.Success) then
                 // Tokens with alphabets, it will otherwise be Identifier
@@ -101,6 +99,8 @@ let tok inputraw =
                 Comma :: (tokenize (input.Substring(1)) (pos + 1))
             elif (Comment_m.Success) then
                 (tokenize (input.Substring(Comment_m.Value.Length)) (pos + Comment_m.Value.Length))
+            elif (String_m.Success) then
+                String(String_m.Value.[1..(String_m.Value.Length - 2)]) :: (tokenize (input.Substring(String_m.Value.Length)) (pos + String_m.Value.Length))
             else
                 // The error message could only return the position of which character has matching issue, might need further ammendement
                 failwith (pos.ToString())

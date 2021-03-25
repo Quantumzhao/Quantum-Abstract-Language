@@ -67,13 +67,15 @@ Needs inquiry:
 
 # TODO
 
-- [ ] a fully functional lexer
-  - [ ] support line comment
-  - [ ] support string
-  - [ ] full support of symbol lexing
+- [x] a fully functional lexer
+  - [x] support line comment
+  - [x] support string
+  - [x] full support of symbol lexing
 - [x] parser
   - [X] apply
   - [X] tuple
+  - [ ] tuple, apply without Paren
+  - [ ] support string
   - [x] other
 - [ ] interpreter
   - [ ] qubit management

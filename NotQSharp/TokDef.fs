@@ -15,3 +15,4 @@ type Token =
     | Integer of int
     | Decimal of decimal
     | Identifier of string
+    | String of string
