@@ -13,7 +13,6 @@ type Expr =
     // argument is a multiple of π: 
     // e.g. -1m means the argument is -π
     | Complex of modulus: decimal * argument: decimal
-    // probably useless
     | String of string
     | Unit
     // normal values, qubits and functions
