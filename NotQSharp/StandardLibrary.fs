@@ -1,6 +1,7 @@
 module StandardLibrary
 
 open Microsoft.Quantum.Simulation.Core
+open System
 open Helper
 open DecimalMath
 open QuantumLib
@@ -31,19 +32,50 @@ let public find_variable name =
     | "i" -> Some i
     | _ -> None
 
-let private arg_real_check a = a = 0m || a = 1m || a = -1m
+let complex_to_decimal c =
+    match c with
+    | Complex_Val(m, a) -> 
+        if a % 2m = 0m then
+            Some m
+        elif a % 2m = 1m || a % 2m = -1m then
+            Some -m
+        else
+            None
+    | _ -> invalidArg "complex" "expect complex"
 
-let private add args =
+let to_int c =
+    match c with
+    | Complex_Val(m, a) -> 
+        match complex_to_decimal (Complex_Val(m, a)) with
+        | Some d -> int (round d)
+        | None -> 
+            invalidArg "complex" "imaginary part is not 0: ambiguous rounding"
+    | Integer_Val i -> i
+    | other -> invalidArg "complex" $"cannot cast {other} to integer"
+
+let to_complex num =
+    match num with
+    | Integer_Val i when i >= 0 -> Complex_Val(decimal i, 0m)
+    | Integer_Val i when i < 0 -> Complex_Val(decimal i, 1m)
+    | Complex_Val(m, a) -> Complex_Val(m, a)
+    | other -> invalidArg "number" $"cannot cast {other} to integer"
+
+let rec private add args =
     match args with
     // integer addition
     | Integer_Val i1 :: Integer_Val i2 :: [] -> Integer_Val(i1 + i2)
     | Complex_Val(m1, a1) :: Complex_Val(m2, a2) :: [] -> 
+        let s1, s2 = complex_to_decimal (Complex_Val(m1, a1)), complex_to_decimal (Complex_Val(m2, a2))
+        match s1, s2 with
         // real addition
-        if arg_real_check a1 && arg_real_check a2 then
-            Complex_Val (m1 + m2, 0m)
+        | Some d1, Some d2 -> 
+            if m1 + m2 < 0m then
+                Complex_Val (-d1 - d2, 1m)
+            else
+                Complex_Val (d1 + d2, 0m)
         // complex addition
         // why would anyone want to do this ?
-        else
+        | _, _ -> 
             let argand_to_cartesian m a =
                 m * DecimalEx.Cos (a * DecimalEx.Pi), m * DecimalEx.Sin (a * DecimalEx.Pi)
             let r1, i1 = argand_to_cartesian m1 a1
@@ -53,28 +85,50 @@ let private add args =
             let m = DecimalEx.Sqrt (r * r + i * i)
             let a = DecimalEx.ATan (i / r) / DecimalEx.Pi
             Complex_Val(m, a)
-    | Complex_Val(m1, a1) :: Integer_Val i :: [] when arg_real_check a1 -> 
-        not_implemented_err ()
-    | Integer_Val i :: Complex_Val(m2, a2) :: [] when arg_real_check a2 -> 
-        not_implemented_err ()
+    | Complex_Val(m1, a1) :: Integer_Val i :: [] -> 
+        add [(Complex_Val(m1, a1)); (to_complex (Integer_Val i))]
+    | Integer_Val i :: Complex_Val(m2, a2) :: [] -> 
+        add [(to_complex (Integer_Val i)); (Complex_Val(m2, a2))]
     | other1 :: other2 :: [] -> 
         invalidArg "expression 1 or expression 2" $"cannot cast either {other1} or {other2} to integer"
     | _ -> too_many_args_err 2 args
 
-let to_int interp_w_env c =
-    match interp_w_env c with
-    | Complex_Val(m, a) when arg_real_check a -> int (round m)
-    | Complex_Val(_, _) -> 
-        invalidArg "complex" "imaginary part is not 0: ambiguous rounding"
-    | Integer_Val i -> i
-    | other -> invalidArg "complex" $"cannot cast {other} to integer"
+let rec private print args =
+    match args with
+    | [] -> 
+        Console.WriteLine () |> ignore
+        Integer_Val 0
+    | String_Val s :: tl -> 
+        Console.Write s |> ignore
+        print tl
+    | Integer_Val i :: tl -> 
+        Console.Write i |> ignore
+        print tl
+    | Complex_Val(m, a) :: tl -> 
+        match complex_to_decimal (Complex_Val(m, a)) with
+        // if it's a real number, print in real format
+        | Some d -> 
+            Console.Write d |> ignore
+            print tl
+        // if it's complex, print in r theta form
+        | None -> 
+            Console.Write $"{m}·e^{a}iπ" |> ignore
+            print tl
+    | Tuple_Val items :: tl -> 
+        not_implemented_err ()
+    | _ -> too_many_args_err 1 args
 
-let to_complex interp_w_env num =
-    match interp_w_env num with
-    | Integer_Val i when i >= 0 -> Complex_Val(decimal i, 0m)
-    | Integer_Val i when i < 0 -> Complex_Val(decimal i, 1m)
-    | Complex_Val(m, a) -> Complex_Val(m, a)
-    | other -> invalidArg "number" $"cannot cast {other} to integer"
+let private equals args =
+    match args with
+    | Integer_Val i1 :: Integer_Val i2 :: [] -> 
+        if i1 = i2 then Integer_Val 1
+        else Integer_Val 0
+    | Complex_Val(m1, a1) :: Complex_Val(m2, a2) :: [] ->
+        if abs a1 % 2m = abs a2 % 2m && m1 = m2 then
+            Integer_Val 1
+        else 
+            Integer_Val 0
+    | _ -> too_many_args_err 2 args
 
 // =============== Quantum Part ==================
 // require refactor in the future
@@ -90,13 +144,18 @@ let private new_qubits arg (sim: QuantumSimulator) =
         System_Val proc'ed_arr
     | _ -> too_many_args_err 1 arg
 
-// only for testing
 let private new_qubit args (sim: QuantumSimulator) =
     match args with
     | Integer_Val option :: [] -> 
-        //let qubit = ClaimQubit.Run(sim, int64 option).Result
         let qubit = sim.QubitManager.Allocate()
-        Qubit_Val qubit
+        match option with
+        | 0 -> Qubit_Val qubit
+        | 1 -> Qubit_Val (Pauli_X.Run(sim, qubit).Result)
+        | 2 -> Qubit_Val (Hadamard.Run(sim, qubit).Result)
+        | 3 -> 
+            let q1 = Pauli_X.Run(sim, qubit).Result
+            Qubit_Val (Hadamard.Run(sim, q1).Result)
+        | _ -> invalidArg "option" "no, it can't, it's surreal"
     | _ -> too_many_args_err 1 args
 
 let private measure args sim =
@@ -109,22 +168,45 @@ let private measure args sim =
 
 let private basic_gate code arg sim =
     match arg with
+    // 1 qubit gates
     | Qubit_Val q :: [] -> 
         match code with
-        | "h" -> Qubit_Val (Hadamard.Run(sim, q).Result)
-        | "px" -> Qubit_Val (Pauli_X.Run(sim, q).Result)
-        | "py" -> Qubit_Val (Pauli_Y.Run(sim, q).Result)
-        | "pz" -> Qubit_Val (Pauli_Z.Run(sim, q).Result)
+        | "H" -> Qubit_Val (Hadamard.Run(sim, q).Result)
+        | "X" -> Qubit_Val (Pauli_X.Run(sim, q).Result)
+        | "Y" -> Qubit_Val (Pauli_Y.Run(sim, q).Result)
+        | "Z" -> Qubit_Val (Pauli_Z.Run(sim, q).Result)
         | _ -> invalidArg "code" "no, it can't, it's surreal"
+    // 2 qubit gates
     | Qubit_Val ctl :: Qubit_Val tgt :: [] -> 
         match code with
-        | "cx" -> 
+        | "CNOT" -> 
             let struct(ctl', tgt') = Controlled_Pauli_X.Run(sim, ctl, tgt).Result
             Tuple_Val [Qubit_Val ctl'; Qubit_Val tgt']
         | _ -> invalidArg "code" "no, it can't, it's surreal"
     | _ -> too_many_args_err 1 arg
 
 // =================== Quantum Part Ends ======================
+
+let rec private is_quantum_data value =
+    match value with
+    | Unit_Val 
+    | String_Val _ 
+    | Complex_Val _ 
+    | Integer_Val _ 
+    | Function_Red _ 
+    | Function_Std _ -> false
+    | Array_Val _ -> false
+    | Qubit_Val _ -> true
+    | System_Val _ -> true
+    | Tuple_Val t -> List.exists is_quantum_data t
+
+let rec private pow args =
+    match args with
+    | Integer_Val basei :: Integer_Val power :: [] -> 
+        DecimalEx.Pow(decimal basei, decimal power)
+    | Function_Red(name, ps, body) :: Integer_Val power :: [] ->
+        not_implemented_err ()
+    | _ -> too_many_args_err 2 args
 
 // gives off a binary vector space of rank n
 // n -> {0, 1}ⁿ
@@ -151,6 +233,7 @@ let private bin_vec_space rank =
     | Integer_Val i :: [] -> flist_to_my_list (bin_vec_space_rec i)
     | _ -> invalidArg "rank" "rank must be an integer"
 
+// returns a range by the given start int, end int and step
 let range args =
     let rec generate_range start end' step finished =
         if start <= end' && end' <= (start + step) then
@@ -193,7 +276,8 @@ let last args =
     | System_Val s :: [] -> not_implemented_err ()
     | _ -> too_many_args_err 1 args
 
-let split args =
+// splits a collection into 2 by the given index
+let private split args =
     match args with
     | Integer_Val i :: Array_Val a :: [] -> 
         let t1, t2 = List.splitAt i a
@@ -202,7 +286,9 @@ let split args =
         not_implemented_err ()
     | _ -> too_many_args_err 2 args
 
-let index args =
+// returns the element indexed by the index
+// for composite system, it also means the old collection is completely discarded
+let private index args =
     match args with
     | Integer_Val i :: Array_Val a :: [] -> a.Item i
     | Integer_Val i :: System_Val s :: [] -> 
@@ -216,14 +302,18 @@ let public call sim (interp_w_env: Expr -> Value) name args =
         // call by value
         let values = List.map interp_w_env args
         match name with
+        // basic operations
         | "add" -> add values
+        | "print" -> print values
         | "bin_vec_space" -> bin_vec_space values
+        // collection operations
         | "head" -> head values
         | "tail" -> tail values
         | "last" -> last values
         | "range" -> range values
+        // qubit operations
         | "new" -> new_qubit values sim
         | "Qubits" -> new_qubits values sim
         | "measure" -> measure values sim
-        | "h" | "px" | "py" | "pz" | "cx" -> basic_gate name values sim
+        | "H" | "X" | "Y" | "Z" | "CNOT" -> basic_gate name values sim
         | _ -> not_implemented_err ()
