@@ -1,6 +1,5 @@
-//This is a comment
-let ctl'123_' = ( h ( new 0 ) ) in //Another one
-let tgt13212312 = ( new 0 ) in
-match ( cx ctl'123_' tgt13212312 ) with
-| newctl , newtgt -> 
-( ( measure newctl ) , ( measure newtgt ) )
+// This is a comment
+let ctl = (H (new 0)) in //Another one
+let tgt = (new 0) in
+match (CNOT ctl tgt) with
+| ctl', tgt' -> ((measure ctl'), (measure tgt'))

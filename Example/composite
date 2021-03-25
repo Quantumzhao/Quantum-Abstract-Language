@@ -1,6 +1,6 @@
 let id x = x in
-    let q = ( new 0 ) in
-    match ( measure q ) with
+    let q = (new 0) in
+    match (measure q) with
     | 1 -> 1
     | 0 -> 0
     | _ -> i

@@ -1,1 +1,2 @@
-( print 42 )
+// this is a comment
+(print 42)
