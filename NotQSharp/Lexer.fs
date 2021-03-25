@@ -13,21 +13,25 @@ let format_err id = failwith $"invalid format {id}"
 /// </summary>
 /// <param name="path">path of the file</param>
 let get_code path = File.ReadAllText(path)
-// File.ReadAllText(path).Split([|' '; '\n'; '\t'; '\r' |], StringSplitOptions.RemoveEmptyEntries)
 
-// let (|Match|_|) pattern input =
-//     let m = Regex(pattern).Match(input) in
-
-//     if m.Success then
-//         Some(List.tail [ for x in m.Groups -> x.Value ])
-//     else
-//         None
-// match th numerals or ids
+/// <summary>
+/// tokenize the input program string
+/// </summary>
+/// <param name ="inputraw"> the input string</param>
 let tok inputraw =
+    /// <summary>
+    /// tokenize helper with a wait to be consumed string and current position
+    /// </summary>
+    /// <param name ="input"> the input string that will wait to be further tokenized</param>
+    /// <param name ="pos"> the position with repect to inputraw that is now tokenizing</param>
     let rec tokenize input pos =
+        // Done tokenizing
         if pos >= (String.length inputraw) then
             []
         else
+            // Generate regular expression of the Tokens
+            // Tokens with unknown length will be matched with regex anchoring the beginning of the input string
+            // Tokens with known length will be matched with specific position(which will always be zero that is from the beginning of the input) and specific length
             let Space_m =
                 Regex("[ \n\r\x0c\t]+").Match(input, 0, 1)
 
@@ -48,7 +52,8 @@ let tok inputraw =
             let Comment_m = Regex("^\/\/\s*\S+.*?\n").Match(input)
 
 
-
+            // Tokenizing string recursively.
+            // After token has been matched, the matched string will be consumed, and the rest of the input string will be passed to the next recursion
             if (Space_m.Success) then
                 tokenize (input.Substring(1)) (pos + 1)
             elif (Decimal_m.Success) then
@@ -58,6 +63,7 @@ let tok inputraw =
                 (Integer(Int32.Parse(Integer_m.Value)))
                 :: (tokenize (input.Substring(Integer_m.Value.Length)) (pos + Integer_m.Value.Length))
             elif (Mis_m.Success) then
+                // Tokens with alphabets, it will otherwise be Identifier
                 if Mis_m.Value.Equals("let")
                    && (Mis_m.Value.Length.Equals(3)) then
                     Let :: (tokenize (input.Substring(3)) (pos + 3))
@@ -96,6 +102,7 @@ let tok inputraw =
             elif (Comment_m.Success) then
                 (tokenize (input.Substring(Comment_m.Value.Length)) (pos + Comment_m.Value.Length))
             else
+                // The error message could only return the position of which character has matching issue, might need further ammendement
                 failwith (pos.ToString())
 
     tokenize inputraw 0
@@ -105,4 +112,3 @@ let tok inputraw =
 let lexer path =
     let words = get_code path in
     tok words
-// List.map match_rule (arr_2_lst words)
