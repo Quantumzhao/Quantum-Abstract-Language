@@ -25,6 +25,7 @@ let rec interp env sim exp =
     | Integer i -> Integer_Val i
     | Complex(m, a) -> Complex_Val(m, a)
     | Qubit q -> Qubit_Val q
+    | String s -> String_Val s
     // interp collections
     | Array exps -> interp_array env sim exps
     | System qexps -> interp_system env sim qexps
@@ -46,7 +47,6 @@ let rec interp env sim exp =
     | Let_Var(name, binding, in_expr) -> interp_let_var env sim name binding in_expr
     | Match(cond, cases) -> interp_match env sim cond cases
     | Unit -> Unit_Val
-    | _ -> not_implemented_err ()
 
 // TODO: qubit support
 and interp_array env sim exps =
