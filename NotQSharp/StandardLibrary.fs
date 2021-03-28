@@ -35,10 +35,13 @@ let public find_variable name =
 let complex_to_decimal c =
     match c with
     | Complex_Val(m, a) -> 
+        // if c is positive real
         if a % 2m = 0m then
             Some m
+        // if c is negative real
         elif a % 2m = 1m || a % 2m = -1m then
             Some -m
+        // if c is complex
         else
             None
     | _ -> invalidArg "complex" "expect complex"
@@ -85,9 +88,11 @@ let rec private add args =
             let m = DecimalEx.Sqrt (r * r + i * i)
             let a = DecimalEx.ATan (i / r) / DecimalEx.Pi
             Complex_Val(m, a)
+    // general case
     | Complex_Val(m1, a1) :: Integer_Val i :: [] -> 
         add [(Complex_Val(m1, a1)); (to_complex (Integer_Val i))]
     | Integer_Val i :: Complex_Val(m2, a2) :: [] -> 
+    // symmetric general case
         add [(to_complex (Integer_Val i)); (Complex_Val(m2, a2))]
     | other1 :: other2 :: [] -> 
         invalidArg "expression 1 or expression 2" $"cannot cast either {other1} or {other2} to integer"
@@ -118,6 +123,7 @@ let rec private print args =
         not_implemented_err ()
     | _ -> too_many_args_err 1 args
 
+/// for now, it only supprts numerical data
 let private equals args =
     match args with
     | Integer_Val i1 :: Integer_Val i2 :: [] -> 
@@ -133,6 +139,7 @@ let private equals args =
 // =============== Quantum Part ==================
 // require refactor in the future
 
+/// allocate a new composite system
 let private new_qubits arg (sim: QuantumSimulator) =
     match arg with
     | Integer_Val n :: [] -> 
@@ -144,6 +151,7 @@ let private new_qubits arg (sim: QuantumSimulator) =
         System_Val proc'ed_arr
     | _ -> too_many_args_err 1 arg
 
+/// allocate a single new qubit (possibly an ancilla)
 let private new_qubit args (sim: QuantumSimulator) =
     match args with
     | Integer_Val option :: [] -> 
@@ -158,13 +166,20 @@ let private new_qubit args (sim: QuantumSimulator) =
         | _ -> invalidArg "option" "no, it can't, it's surreal"
     | _ -> too_many_args_err 1 args
 
-let private measure args sim =
+/// measures the qubit, and returns the result together with a new state of the qubit
+let private measure_n_reset args sim =
     match args with
     | Qubit_Val q :: [] -> 
-        let res = Measure.Run(sim, q).Result
+        let struct(res, qubit) = Measure.Run(sim, q).Result
         if res = Result.One then Integer_Val 1
-        else Integer_Val 0
+        else Tuple_Val[Integer_Val 0; Qubit_Val qubit]
     | _ -> too_many_args_err 1 args
+
+/// the classical measure operation. Can only return the classical result
+let private measure args sim =
+    match measure_n_reset args sim with
+    | Tuple_Val(_ :: qubit :: _) -> qubit
+    | other -> syntax_err Tuple_Val other
 
 let private basic_gate code arg sim =
     match arg with
@@ -187,6 +202,9 @@ let private basic_gate code arg sim =
 
 // =================== Quantum Part Ends ======================
 
+/// <summary>
+/// asserts if <c>value</c> contains qubits. For example, it can be a tuple containing qubits
+/// </summary>
 let rec private is_quantum_data value =
     match value with
     | Unit_Val 
@@ -200,16 +218,32 @@ let rec private is_quantum_data value =
     | System_Val _ -> true
     | Tuple_Val t -> List.exists is_quantum_data t
 
-let rec private pow args =
+/// <summary>raise the base to a specified power. Same for functions</summary>
+/// <remarks>the power cannot be negative</remarks>
+let private pow args =
     match args with
     | Integer_Val basei :: Integer_Val power :: [] -> 
-        DecimalEx.Pow(decimal basei, decimal power)
+        let res = DecimalEx.Pow(decimal basei, decimal power)
+        Integer_Val (int res)
+    | Complex_Val(m, a) :: Integer_Val i :: [] ->
+        let m' = DecimalEx.Pow(m, decimal i)
+        let a' = DecimalEx.Pow(a, decimal i)
+        Complex_Val(m', a')
     | Function_Red(name, ps, body) :: Integer_Val power :: [] ->
+        let rec rec_pow op pow =
+            if pow = 0 then
+                fun x -> x
+            else
+                op (rec_pow op (pow - 1))
+        if power < 0 then
+            not_implemented_err ()
+        else
+            
         not_implemented_err ()
     | _ -> too_many_args_err 2 args
 
-// gives off a binary vector space of rank n
-// n -> {0, 1}ⁿ
+/// gives off a binary vector space of rank n.
+/// n -> {0, 1}ⁿ
 let private bin_vec_space rank =
     let rec bin_vec_space_rec rank =
         if rank <= 0 then
@@ -233,7 +267,13 @@ let private bin_vec_space rank =
     | Integer_Val i :: [] -> flist_to_my_list (bin_vec_space_rec i)
     | _ -> invalidArg "rank" "rank must be an integer"
 
-// returns a range by the given start int, end int and step
+/// <summary>returns a range by the given start int, end int and step. (inclusive)</summary>
+/// <remarks>
+/// The possible overloads: 
+/// - <c>Integer -> Integer -> Integer -> Array</c>: start, end, step
+/// - <c>Integer -> Integer -> Array</c>: start, end. Assume step to be 1
+/// - <c>Integer -> Array</c>: end. Assume starts from 0 and step 1
+/// </remarks>
 let range args =
     let rec generate_range start end' step finished =
         if start <= end' && end' <= (start + step) then
@@ -252,18 +292,24 @@ let range args =
         Array_Val (List.map Integer_Val list)
     | _ -> too_many_args_err 3 args
 
-let head args =
+/// <returns>A tuple containing the first element and rest</returns>
+/// <remarks>
+/// Overloads: 
+/// 1. <c>Array -> Tuple(Value, Array)</c>
+/// 2. <c>System -> Tuple(Qubit, System)</c>
+/// </remarks>
+let head_n_tail args =
     match args with
-    | Array_Val (head :: _) :: [] -> head
-    | System_Val (head :: _) :: [] -> head
+    | Array_Val (head :: tail) :: [] -> Tuple_Val [head; Array_Val tail]
+    | System_Val (head :: tail) :: [] -> Tuple_Val [head; Array_Val tail]
     | _ -> too_many_args_err 1 args
 
-let tail args =
-    match args with
-    | Array_Val a :: [] -> Array_Val a.Tail
-    | System_Val s :: [] -> System_Val s.Tail
-    | _ -> too_many_args_err 1 args
-
+/// <summary>returns the last element of an array or composite system</summary>
+/// <remarks>
+/// Overloads: 
+/// 1. <c>Integer -> Array -> Data</c>
+/// 2. <c>Integer -> System -> Qubit</c>
+/// </remarks>
 let last args =
     match args with
     | Array_Val a :: [] -> 
@@ -276,7 +322,12 @@ let last args =
     | System_Val s :: [] -> not_implemented_err ()
     | _ -> too_many_args_err 1 args
 
-// splits a collection into 2 by the given index
+/// <summary>splits a collection into 2 by the given index</summary>
+/// <remarks>
+/// Overloads: 
+/// 1. <c>Integer -> Array -> Tuple(Array, Array)</c>
+/// 2. <c>Integer -> System -> Tuple(System, System)</c>
+/// </remarks>
 let private split args =
     match args with
     | Integer_Val i :: Array_Val a :: [] -> 
@@ -286,8 +337,15 @@ let private split args =
         not_implemented_err ()
     | _ -> too_many_args_err 2 args
 
-// returns the element indexed by the index
-// for composite system, it also means the old collection is completely discarded
+/// <summary>
+/// returns the element indexed by the index. 
+/// for composite system, it also means the old collection is completely discarded
+/// </summary>
+/// <remarks>
+/// Overloads: 
+/// 1. <c>Integer -> Array -> Data</c>
+/// 2. <c>Integer -> System -> Qubit</c>
+/// </remarks>
 let private index args =
     match args with
     | Integer_Val i :: Array_Val a :: [] -> a.Item i
@@ -295,6 +353,21 @@ let private index args =
         not_implemented_err ()
     | _ -> too_many_args_err 2 args
 
+/// <summary>
+/// A wrapper for F# functions, making them callable from AST "apply" nodes
+/// </summary>
+/// <param name="fs_fun">short for F# function</param>
+/// <param name="args">arguments of the function</param>
+let apply fs_fun (args: Value list) =
+    fs_fun args
+
+/// <summary>
+/// the main entrance of any standard library function. 
+/// </summary>
+/// <param name="sim">a quantum simulator instance</param>
+/// <param name="interp_w_env">an interpret function that has been partially applied with environment</param>
+/// <param name="name">name of the standard library function</param>
+/// <param name="args">arguments of the function</param>
 let public call sim (interp_w_env: Expr -> Value) name args =
     // call by name
     match name with
@@ -307,8 +380,7 @@ let public call sim (interp_w_env: Expr -> Value) name args =
         | "print" -> print values
         | "bin_vec_space" -> bin_vec_space values
         // collection operations
-        | "head" -> head values
-        | "tail" -> tail values
+        | "head_n_tail" -> head_n_tail values
         | "last" -> last values
         | "range" -> range values
         // qubit operations
