@@ -66,7 +66,7 @@
         return target;
     }
 
-    operation Measure (target: Qubit) : Result {
-        return M(target);
+    operation Measure (target: Qubit) : (Result, Qubit) {
+        return (M(target), target);
     }
 }
