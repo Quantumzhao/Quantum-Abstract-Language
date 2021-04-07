@@ -140,7 +140,7 @@ let private equals args =
 // require refactor in the future
 
 /// allocate a new composite system
-let private new_qubits arg (sim: QuantumSimulator) =
+let private new_qubits (sim: QuantumSimulator) arg =
     match arg with
     | Integer_Val n :: [] -> 
         // a QArray of Q# qubits
@@ -152,7 +152,7 @@ let private new_qubits arg (sim: QuantumSimulator) =
     | _ -> too_many_args_err 1 arg
 
 /// allocate a single new qubit (possibly an ancilla)
-let private new_qubit args (sim: QuantumSimulator) =
+let private new_qubit (sim: QuantumSimulator) args =
     match args with
     | Integer_Val option :: [] -> 
         let qubit = sim.QubitManager.Allocate()
@@ -167,21 +167,21 @@ let private new_qubit args (sim: QuantumSimulator) =
     | _ -> too_many_args_err 1 args
 
 /// measures the qubit, and returns the result together with a new state of the qubit
-let private measure_n_reset args sim =
+let private measure_n_reset sim args =
     match args with
     | Qubit_Val q :: [] -> 
         let struct(res, qubit) = Measure.Run(sim, q).Result
-        if res = Result.One then Integer_Val 1
+        if res = Result.One then Tuple_Val[Integer_Val 1; Qubit_Val qubit]
         else Tuple_Val[Integer_Val 0; Qubit_Val qubit]
     | _ -> too_many_args_err 1 args
 
 /// the classical measure operation. Can only return the classical result
-let private measure args sim =
-    match measure_n_reset args sim with
-    | Tuple_Val(_ :: qubit :: _) -> qubit
+let private measure sim args =
+    match measure_n_reset sim args with
+    | Tuple_Val(res :: _) -> res
     | other -> syntax_err Tuple_Val other
 
-let private basic_gate code arg sim =
+let private basic_gate sim code arg =
     match arg with
     // 1 qubit gates
     | Qubit_Val q :: [] -> 
@@ -353,39 +353,44 @@ let private index args =
         not_implemented_err ()
     | _ -> too_many_args_err 2 args
 
-/// <summary>
-/// A wrapper for F# functions, making them callable from AST "apply" nodes
-/// </summary>
-/// <param name="fs_fun">short for F# function</param>
-/// <param name="args">arguments of the function</param>
-let apply fs_fun (args: Value list) =
-    fs_fun args
 
 /// <summary>
-/// the main entrance of any standard library function. 
+/// try to find a variable/standard libray function by the given name
 /// </summary>
-/// <param name="sim">a quantum simulator instance</param>
+/// <param name="sim">the reference to quantum simulator</param>
+/// <param name="name">name of the target</param>
+/// <returns><c>None</c> if it doesn't exist. Otherwise returns something</returns>
+let public find sim name =
+    match find_variable name with
+    | Some v -> Some v
+    | None -> 
+        match name with
+        // basic operations
+        | "add" -> Some (Function_Std(name, add))
+        | "print" -> Some (Function_Std(name, print))
+        | "bin_vec_space" -> Some (Function_Std(name, bin_vec_space))
+        // collection operations
+        | "head_n_tail" -> Some (Function_Std(name, head_n_tail))
+        | "last" -> Some (Function_Std(name, last))
+        | "range" -> Some (Function_Std(name, range))
+        // qubit operations
+        | "new" -> Some (Function_Std(name, (new_qubit sim)))
+        | "Qubits" -> Some (Function_Std(name, (new_qubits sim)))
+        | "measure" -> Some (Function_Std(name, (measure sim)))
+        | "H" | "X" | "Y" | "Z" | "CNOT" -> Some (Function_Std(name, (basic_gate sim name)))
+        | _ -> None
+
+/// <summary>
+/// calls a standard library function
+/// </summary>
+/// <param name="name">name of the function</param>
 /// <param name="interp_w_env">an interpret function that has been partially applied with environment</param>
-/// <param name="name">name of the standard library function</param>
+/// <param name="func">the already-partially-applied standard library function</param>
 /// <param name="args">arguments of the function</param>
-let public call sim (interp_w_env: Expr -> Value) name args =
+let public call_std (interp_w_env: Expr -> Value) name func args =
     // call by name
     match name with
     | _ -> 
         // call by value
         let values = List.map interp_w_env args
-        match name with
-        // basic operations
-        | "add" -> add values
-        | "print" -> print values
-        | "bin_vec_space" -> bin_vec_space values
-        // collection operations
-        | "head_n_tail" -> head_n_tail values
-        | "last" -> last values
-        | "range" -> range values
-        // qubit operations
-        | "new" -> new_qubit values sim
-        | "Qubits" -> new_qubits values sim
-        | "measure" -> measure values sim
-        | "H" | "X" | "Y" | "Z" | "CNOT" -> basic_gate name values sim
-        | _ -> not_implemented_err ()
+        func values

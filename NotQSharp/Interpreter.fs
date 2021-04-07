@@ -36,11 +36,12 @@ let rec interp env sim exp =
         match find_defined env v with
         | Some value -> value
         | None -> 
-            // then try to find variables defined in standard library
-            match find_variable v with
+            // then try to find variables/functions defined in standard library
+            match find sim v with
             | Some value -> value
-            // if find nothing, assume it is a standard library function
-            | None -> Function_Std v
+            // if find nothing, then the variable is either not in scope at all 
+            // or it is a qubit and its ownership has been transfered
+            | None -> failwith $"{v} does not exist in the current space-time frame"
     // interp syntax structure
     | Apply(func, args) -> interp_apply env sim func args
     | Let_Fun(name, ps, body, in_expr) -> interp_let_fun env sim name ps body in_expr
@@ -98,7 +99,7 @@ and interp_apply env sim func args =
         // sorta hack, should replace it if there's any better way
         let new_env = List.append param_arg_pair param_arg_pair
         interp new_env sim body
-    | Function_Std name -> call sim (interp env sim) name args
+    | Function_Std(name, func) -> call_std (interp env sim) name func args
     | Function_Red(_, ps, _) -> 
         failwith $"argument number mismatch: expect {ps.Length}, actual {args.Length}"
     | other when args.Length <> 0 -> 
@@ -125,8 +126,8 @@ and interp_match env sim cond cases =
                 // evaluate the branch
                 interp new_env sim expr
             | WildCard -> interp env sim expr
-            | Int_Lit i when cond = Integer_Val i -> interp env sim expr
-            | Comp_Lit m when cond = Complex_Val(m, 0m) -> interp env sim expr
+            | Int_Lit i when value_equal cond (Integer_Val i) -> interp env sim expr
+            | Comp_Lit m when value_equal cond (Complex_Val(m, 0m)) -> interp env sim expr
             // if no match, jump to next
             | _ -> interp_match_rec env cond rest
         // when the pattern is a tuple and the condition returns a tuple as well

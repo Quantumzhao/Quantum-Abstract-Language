@@ -49,4 +49,4 @@ type Value =
     /// function as a value (include complete definition and body).
     /// Short for reduced function. Just a fancy name, nothing else
     | Function_Red of string * string list * Expr
-    | Function_Std of string
+    | Function_Std of string * (Value list -> Value)
