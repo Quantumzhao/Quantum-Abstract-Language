@@ -1,5 +1,36 @@
 # To Discuss
 
+Needs inquiry:
+
+- how to verify a unitary operation programmatically
+- why Q# default `M` measures in Z not I
+
+# TODO
+
+- [x] a fully functional lexer
+  - [x] support line comment
+  - [x] support string
+  - [x] full support of symbol lexing
+- [x] parser
+  - [X] apply
+  - [X] tuple
+  - [X] tuple, apply without Paren
+  - [X] support string
+  - [x] other
+- [ ] interpreter
+  - [ ] qubit management
+  - [ ] `controlled` implementation
+  - [ ] `adjoint` implementation
+  - [x] other
+- [ ] standard library
+  - [ ] some necessary functions
+
+# Example code
+
+See `./Example`
+
+# Notes
+
 - [X] ownership
 
   > yes
@@ -51,45 +82,11 @@
   
 - [x] name
 
-  > probably F##Q
+  > probably QAML
 
 - [X] call by name
 
   > no, call-by-value
-
-
-Needs inquiry:
-
-- whether to implement adjoint variant
-- how to verify a unitary operation programmatically
-- Hadamard sandwich
-- why Q# default `M` measures in Z not I
-
-# TODO
-
-- [x] a fully functional lexer
-  - [x] support line comment
-  - [x] support string
-  - [x] full support of symbol lexing
-- [x] parser
-  - [X] apply
-  - [X] tuple
-  - [ ] tuple, apply without Paren
-  - [ ] support string
-  - [x] other
-- [ ] interpreter
-  - [ ] qubit management
-  - [ ] `controlled` implementation
-  - [ ] `adjoint` implementation
-  - [x] other
-- [ ] standard library
-  - [ ] some necessary functions
-
-# Example code
-
-See `./Example`
-
-# Notes
 
 ## Introduction
 
@@ -115,7 +112,7 @@ For example, the following common features are missing:
 
 - pattern matching
 
-  > Actually it supports a subset of ML style pattern matching
+  > Actually it supports a subset of CAML style pattern matching
 
 However, it does have good support for quantum data types and qubit operations, which will be discussed in detail in the following sections. 
 
