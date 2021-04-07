@@ -74,7 +74,7 @@ and interp_tuple env sim exps =
 and interp_let_fun env sim name ps body in_expr =
     // put all info into the reduced function without changing anything
     // since here it follows call by name
-    let fun_red = Function_Red(name, ps, body)
+    let fun_red = Function_Red(name, env, ps, body)
     let new_env = (name, fun_red) :: env
     interp new_env sim in_expr
 
@@ -90,17 +90,17 @@ and interp_apply env sim func args =
     // it may actually be a variable or expression, doesn't matter
     let id = interp env sim func
     match id with
-    | Function_Red(name, ps, body) when ps.Length = args.Length -> 
+    | Function_Red(name, closure, ps, body) when ps.Length = args.Length -> 
         // first evaluate all the arguments
         let eval'ed_args = List.map (interp env sim) args
         // then pair them with parameters
         let param_arg_pair = List.zip ps eval'ed_args
         // pack into a set of environment
         // sorta hack, should replace it if there's any better way
-        let new_env = List.append param_arg_pair param_arg_pair
+        let new_env = List.append param_arg_pair closure
         interp new_env sim body
     | Function_Std(name, func) -> call_std (interp env sim) name func args
-    | Function_Red(_, ps, _) -> 
+    | Function_Red(_, _, ps, _) -> 
         failwith $"argument number mismatch: expect {ps.Length}, actual {args.Length}"
     | other when args.Length <> 0 -> 
         failwith $"{other} is not a function, hence cannot apply {args}"

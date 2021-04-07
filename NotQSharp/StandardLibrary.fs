@@ -229,7 +229,7 @@ let private pow args =
         let m' = DecimalEx.Pow(m, decimal i)
         let a' = DecimalEx.Pow(a, decimal i)
         Complex_Val(m', a')
-    | Function_Red(name, ps, body) :: Integer_Val power :: [] ->
+    | Function_Red(name, env, ps, body) :: Integer_Val power :: [] ->
         let rec rec_pow op pow =
             if pow = 0 then
                 fun x -> x
