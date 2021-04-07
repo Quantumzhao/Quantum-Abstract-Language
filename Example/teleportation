@@ -1,14 +1,21 @@
 let EPR = (CNOT (H (new 0)) (new 0)) in
 
-let bellMeasure q1 q2 = 
+let bellMeasure q2 q1 = 
     match (CNOT q1 q2) with
-    | x, y -> (measure (H x)), measure (H y))
+    | x, y -> ((measure (H x)), (measure y))
+in
+
+let pow f p =
+    let id x = x in
+    match p with
+    | 0 -> id
+    | 1 -> f
 in
 
 let telep = 
     match EPR with
-    | x, y ->
-        let f shared = (bellMeasure x shared) in
+    | somex, y ->
+        let f msg = (bellMeasure somex msg) in
         let encode x_power z_power qubit = 
             // pow : (a' -> a') -> int -> (a' -> a')
             ((pow Z z_power) ((pow X x_power) qubit))
@@ -18,3 +25,10 @@ let telep =
         in
         let g x_power z_power = (U y x_power z_power) in
         (f, g)
+in
+
+let msg = (H (new 0)) in
+match telep with
+| f, g -> 
+    match (f msg) with
+    | z_power, x_power -> (measure (g x_power z_power))
