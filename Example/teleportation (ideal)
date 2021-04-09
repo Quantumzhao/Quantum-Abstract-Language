@@ -1,0 +1,18 @@
+// Note that this syntax is not suported by the interpreter yet. 
+// it represents the ultimate ideal syntax
+
+let bellMeasure q2 q1 = 
+    let x, y = CNOT q1 q2
+    measure (H x), (measure y)
+
+let telep = 
+    let x, y = CNOT (new +) (new 0)
+    let U qubit x_power z_power = 
+        qubit |> (pow X x_power) |> (pow Z z_power)
+    bellMeasure x, U y
+
+// the qubit to be teleported. It can be in any state
+let qubit = new +
+let f, g = telep
+let z_power, x_power = f qubit
+measure (g x_power z_power)
