@@ -4,6 +4,7 @@ Needs inquiry:
 
 - how to verify a unitary operation programmatically
 - why Q# default `M` measures in Z not I
+- how to implement rational exponent of unitary operators
 
 # TODO
 
@@ -56,7 +57,7 @@ See `./Example`
 
 - [X] indexing
 
-  > use `index` for only arrays
+  > when apply `index` to arrays, the semantic is consistent with classical ones. When applying to composite systems, while the qubit at specified index is retrieved, the original collection is discarded. 
 
 - [x] representation of tensor product
 
@@ -154,7 +155,7 @@ Since `qubit ` value has been changed since line 1, another access may get a dif
 
 Therefore we take the approach of linearity, which means no variables are allowed to use twice. 
 
-> Note that this is quite different as what descried in Sir Selinger's *Quantum Lambda Calculus* and *Quipper* language, because we think creating an entangled pair with the same state to immitate the "cloning" operation is not a good idea. 
+> Note that this is quite different as what descried in Sir Selinger's *Quantum Lambda Calculus* and *Quipper* language, because we think creating an entangled pair with the same state to imitate the "cloning" operation is not a good idea. 
 
 This leads to a profound shift in our language design. 
 
@@ -264,20 +265,11 @@ match tuple with
 It serves the functionality of `if` block: 
 
 ```f#
-match to_bool num with
+match num with
 | 0 -> 0
 | 1 -> 1
 ```
 
-In which case, `to_bool` function has the following definition: 
-$$
-\text{to_bool}:\Z\mapsto\{0,1\} \\
-\text{to_bool}(x)=
-\begin{cases}
-0&\text{ if x=0}\\
-1&\text{ otherwise}
-\end{cases}
-$$
 There are some peculiarities: 
 
 - the language only supports the pattern matching of **tuple** and **scalar values**

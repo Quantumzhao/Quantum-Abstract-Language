@@ -17,7 +17,7 @@ let rec find_defined env name =
 /// interprets the expression under the environment
 /// </summary>
 /// <param name="env">environment</param>
-/// <param name="sim">qubits pool</param>
+/// <param name="sim">simulator</param>
 /// <param name="exp">expression</param>
 let rec interp env sim exp = 
     match exp with

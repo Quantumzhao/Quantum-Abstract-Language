@@ -14,8 +14,8 @@ in
 
 let telep = 
     match EPR with
-    | somex, y ->
-        let f msg = (bellMeasure somex msg) in
+    | x, y ->
+        let f msg = (bellMeasure x msg) in
         let encode x_power z_power qubit = 
             // pow : (a' -> a') -> int -> (a' -> a')
             ((pow Z z_power) ((pow X x_power) qubit))
