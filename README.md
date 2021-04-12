@@ -2,8 +2,8 @@
 
 Needs inquiry:
 
+- quantum closure
 - how to verify a unitary operation programmatically
-- why Q# default `M` measures in Z not I
 - how to implement rational exponent of unitary operators
 
 # TODO
