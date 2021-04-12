@@ -11,7 +11,6 @@ open Microsoft.Quantum.Canon
 open Microsoft.Quantum.Simulation.Simulators
 
 // TODO: 
-// map: the familiar map. (a' -> b') -> a' list -> b' list
 // fold: the familiar fold. (a' -> b' -> a') -> a' -> b' list -> a'
 // borrow: borrows a set of qubits, do some operations, and then return the qubits back to the set
 //         (System -> a') -> System -> System * a'
@@ -31,6 +30,23 @@ let public find_variable name =
     | "e" -> Some e
     | "i" -> Some i
     | _ -> None
+
+    
+/// <summary>
+/// calls a standard library function
+/// </summary>
+/// <param name="name">name of the function</param>
+/// <param name="interp_w_env">an interpret function that has been partially applied with environment</param>
+/// <param name="func">the already-partially-applied standard library function</param>
+/// <param name="args">arguments of the function</param>
+let public call_std (interp_w_env: Expr -> Value) name func args =
+    // call by name
+    match name with
+    | _ -> 
+        // call by value
+        let values = List.map interp_w_env args
+        func values
+
 
 let complex_to_decimal c =
     match c with
@@ -62,6 +78,12 @@ let to_complex num =
     | Integer_Val i when i < 0 -> Complex_Val(decimal i, 1m)
     | Complex_Val(m, a) -> Complex_Val(m, a)
     | other -> invalidArg "number" $"cannot cast {other} to integer"
+
+let complex_constructor args =
+    // convert the modulus and argument to decimal, regardless whether it's an integer or decimal
+    match List.map (to_complex >> complex_to_decimal) args with
+    | Some m :: Some a :: []  -> Complex_Val(m, a)
+    | _ -> invalidArg "modulus and argument" "either one of them is a complex number"
 
 let rec private add args =
     match args with
@@ -229,17 +251,26 @@ let private pow args =
         let m' = DecimalEx.Pow(m, decimal i)
         let a' = DecimalEx.Pow(a, decimal i)
         Complex_Val(m', a')
-    | Function_Red(name, env, ps, body) :: Integer_Val power :: [] ->
-        let rec rec_pow op pow =
+    (*| Function_Red(name, env, ps, body) :: Integer_Val power :: [] ->
+        let rec rec_pow (op : 'a -> 'a) pow : ('a -> 'a) =
             if pow = 0 then
                 fun x -> x
             else
-                op (rec_pow op (pow - 1))
+                fun x -> op ((rec_pow op (pow - 1)) x)
         if power < 0 then
             not_implemented_err ()
         else
-            
-        not_implemented_err ()
+            not_implemented_err ()
+    | Function_Std(name, body) :: Integer_Val power :: [] -> 
+        let rec rec_pow (op : 'a -> 'a) pow : ('a -> 'a) =
+            if pow = 0 then
+                fun x -> x
+            else
+                fun x -> op ((rec_pow op (pow - 1)) x)
+        if power < 0 then
+            not_implemented_err ()
+        else
+            (fun arg -> )*)
     | _ -> too_many_args_err 2 args
 
 /// gives off a binary vector space of rank n.
@@ -353,14 +384,27 @@ let private index args =
         not_implemented_err ()
     | _ -> too_many_args_err 2 args
 
+let private map interp_env args =
+    let to_collection list =
+        match list with
+        | System_Val s -> s
+        | Array_Val a -> a
+        | _ -> invalidArg "list" "not a collection"
+    match args with
+    | Function_Std(name, body) :: list :: [] -> 
+        List.map (fun arg -> body [arg]) (to_collection list)
+    | Function_Red(name, closure, ps, body) :: list :: [] -> 
+        not_implemented_err ()
+    | _ -> not_implemented_err ()
 
 /// <summary>
 /// try to find a variable/standard libray function by the given name
 /// </summary>
 /// <param name="sim">the reference to quantum simulator</param>
+/// <param name="interp">the interp functino with environment</param>
 /// <param name="name">name of the target</param>
 /// <returns><c>None</c> if it doesn't exist. Otherwise returns something</returns>
-let public find sim name =
+let public find sim interp name =
     match find_variable name with
     | Some v -> Some v
     | None -> 
@@ -369,6 +413,7 @@ let public find sim name =
         | "add" -> Some (Function_Std(name, add))
         | "print" -> Some (Function_Std(name, print))
         | "bin_vec_space" -> Some (Function_Std(name, bin_vec_space))
+        | "Complex" -> Some (Function_Std(name, complex_constructor))
         // collection operations
         | "head_n_tail" -> Some (Function_Std(name, head_n_tail))
         | "last" -> Some (Function_Std(name, last))
@@ -379,18 +424,3 @@ let public find sim name =
         | "measure" -> Some (Function_Std(name, (measure sim)))
         | "H" | "X" | "Y" | "Z" | "CNOT" -> Some (Function_Std(name, (basic_gate sim name)))
         | _ -> None
-
-/// <summary>
-/// calls a standard library function
-/// </summary>
-/// <param name="name">name of the function</param>
-/// <param name="interp_w_env">an interpret function that has been partially applied with environment</param>
-/// <param name="func">the already-partially-applied standard library function</param>
-/// <param name="args">arguments of the function</param>
-let public call_std (interp_w_env: Expr -> Value) name func args =
-    // call by name
-    match name with
-    | _ -> 
-        // call by value
-        let values = List.map interp_w_env args
-        func values

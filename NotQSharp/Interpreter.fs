@@ -37,7 +37,7 @@ let rec interp env sim exp =
         | Some value -> value
         | None -> 
             // then try to find variables/functions defined in standard library
-            match find sim v with
+            match find sim interp v with
             | Some value -> value
             // if find nothing, then the variable is either not in scope at all 
             // or it is a qubit and its ownership has been transfered
