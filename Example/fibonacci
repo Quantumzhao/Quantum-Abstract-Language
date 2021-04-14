@@ -1,9 +1,9 @@
 let fib n =
     match n with
-    | 0 -> 1
-    | 1 -> 1
+    | 0.0 -> 1
+    | 1.0 -> 1
     // we should have implemented negative integer support in lexer and parser ...
     | _ -> (add (fib (add n (Complex 1 1))) (fib (add n (Complex 2 1))))
 in
-(print (fib 3))
+(print (fib 4.0))
     

@@ -95,9 +95,10 @@ and interp_apply env sim func args =
         let eval'ed_args = List.map (interp env sim) args
         // then pair them with parameters
         let param_arg_pair = List.zip ps eval'ed_args
+        let fun_n_pa_pair = (name, id) :: param_arg_pair
         // pack into a set of environment
         // sorta hack, should replace it if there's any better way
-        let new_env = List.append param_arg_pair closure
+        let new_env = List.append fun_n_pa_pair closure
         interp new_env sim body
     | Function_Std(name, func) -> call_std (interp env sim) name func args
     | Function_Red(_, _, ps, _) -> 
