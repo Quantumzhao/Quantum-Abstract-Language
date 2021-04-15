@@ -35,8 +35,9 @@ type Expr =
     // it can only be a return value from expressions
     | System of Expr list
     | Qubit of Qubit
+    | Literal of Value
 
-type Value = 
+and Value = 
     | Unit_Val
     | String_Val of string
     | Complex_Val of decimal * decimal

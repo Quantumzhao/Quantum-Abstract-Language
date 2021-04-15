@@ -51,6 +51,7 @@ let rec pretty_draw (ast: Expr) =
             patterns.ToString() + ": " + (pretty_draw expr)
         let drawn_cases = pretty_print (List.map draw_single_case cases)
         multi_node "Match" (drawn_cond + drawn_cases)
+    | _ -> invalidArg "ast" "it's not possible!"
 
 /// states if two values are equal. Only supports integer and complex for now
 let value_equal v1 v2 =

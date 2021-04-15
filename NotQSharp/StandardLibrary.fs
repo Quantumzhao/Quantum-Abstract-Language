@@ -35,18 +35,25 @@ let public find_variable name =
 /// <summary>
 /// calls a standard library function
 /// </summary>
+/// <param name="interp_w_env">an interpret function that has been partially applied with environment</param>
+/// <param name="func">the already-partially-applied standard library function</param>
+/// <param name="args">arguments of the function</param>
+let public call_std_by_value interp_w_env func args =
+    let values = List.map interp_w_env args
+    func values
+
+/// <summary>
+/// calls a standard library function
+/// </summary>
 /// <param name="name">name of the function</param>
 /// <param name="interp_w_env">an interpret function that has been partially applied with environment</param>
 /// <param name="func">the already-partially-applied standard library function</param>
 /// <param name="args">arguments of the function</param>
-let public call_std (interp_w_env: Expr -> Value) name func args =
+let public call_std_by_name (interp_w_env: Expr -> Value) name func args =
     // call by name
     match name with
-    | _ -> 
-        // call by value
-        let values = List.map interp_w_env args
-        func values
-
+    | "map" -> func interp_w_env args
+    | _ -> not_implemented_err ()
 
 let complex_to_decimal c =
     match c with
@@ -242,7 +249,7 @@ let rec private is_quantum_data value =
 
 /// <summary>raise the base to a specified power. Same for functions</summary>
 /// <remarks>the power cannot be negative</remarks>
-let private pow args =
+let private pow interp_w_env args =
     match args with
     | Integer_Val basei :: Integer_Val power :: [] -> 
         let res = DecimalEx.Pow(decimal basei, decimal power)
@@ -384,17 +391,21 @@ let private index args =
         not_implemented_err ()
     | _ -> too_many_args_err 2 args
 
-let private map interp_env args =
+let private map interp_w_env (args: Expr list) =
     let to_collection list =
         match list with
         | System_Val s -> s
         | Array_Val a -> a
         | _ -> invalidArg "list" "not a collection"
     match args with
-    | Function_Std(name, body) :: list :: [] -> 
+    | func :: collec :: [] ->
+        let eval'ed_collec = collec |> interp_w_env |> to_collection
+        let apply_2_ele e = Apply(func, [Literal e])
+        List.map (apply_2_ele >> interp_w_env) eval'ed_collec
+    (*| Function_Std(name, body) :: list :: [] -> 
         List.map (fun arg -> body [arg]) (to_collection list)
     | Function_Red(name, closure, ps, body) :: list :: [] -> 
-        not_implemented_err ()
+        not_implemented_err ()*)
     | _ -> not_implemented_err ()
 
 /// <summary>

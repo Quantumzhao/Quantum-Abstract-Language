@@ -48,6 +48,7 @@ let rec interp env sim exp =
     | Let_Var(name, binding, in_expr) -> interp_let_var env sim name binding in_expr
     | Match(cond, cases) -> interp_match env sim cond cases
     | Unit -> Unit_Val
+    | _ -> failwith "it's not possible!"
 
 // TODO: qubit support
 and interp_array env sim exps =
@@ -100,7 +101,7 @@ and interp_apply env sim func args =
         // sorta hack, should replace it if there's any better way
         let new_env = List.append fun_n_pa_pair closure
         interp new_env sim body
-    | Function_Std(name, func) -> call_std (interp env sim) name func args
+    | Function_Std(_, func) -> call_std_by_value (interp env sim) func args
     | Function_Red(_, _, ps, _) -> 
         failwith $"argument number mismatch: expect {ps.Length}, actual {args.Length}"
     | other when args.Length <> 0 -> 
