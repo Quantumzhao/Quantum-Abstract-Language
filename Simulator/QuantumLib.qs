@@ -3,11 +3,6 @@
     open Microsoft.Quantum.Canon;
     open Microsoft.Quantum.Intrinsic;
     
-    //@EntryPoint()
-    operation HelloQ () : Unit {
-        Message("Hello quantum world!");
-    }
-
     /// # Summary
     /// all qubits are initialized as |0⟩
     /// # Input
@@ -40,33 +35,58 @@
         return q;
     }
 
-    operation Hadamard (target : Qubit) : Qubit {
+    operation Measure (target: Qubit) : (Result, Qubit) {
+        return (M(target), target);
+    }
+
+    operation HGate (target : Qubit) : Qubit {
         H(target);
         return target;
     }
 
-    operation Pauli_X (target: Qubit) : Qubit {
+    // TODO: controlled hadamard
+    // Also please follow the naming conventions and function signatures
+
+    operation XGate (target: Qubit) : Qubit {
         X(target);
         return target;
     }
 
-    operation Controlled_Pauli_X (control: Qubit, target: Qubit) 
+    operation ControlledXGate (control: Qubit, target: Qubit) 
     : (Qubit, Qubit) {
         CNOT(control, target);
         return (control, target);
     }
 
-    operation Pauli_Y (target: Qubit) : Qubit {
+    operation YGate (target: Qubit) : Qubit {
         Y(target);
         return target;
     }
 
-    operation Pauli_Z (target: Qubit) : Qubit {
+    // TODO: controlled Y
+
+    // TODO: adjoint Y
+
+    operation ZGate (target: Qubit) : Qubit {
         Z(target);
         return target;
     }
 
-    operation Measure (target: Qubit) : (Result, Qubit) {
-        return (M(target), target);
-    }
+    // TODO: controlled Z
+
+    // TODO: adjoint Z
+
+    // TODO: phase (S gate)
+
+    // TODO: controlled phase
+
+    // TODO: adjoint phase
+
+    // TODO: π/8 gate
+
+    // TODO: controlled π/8 gate
+
+    // TODO: adjoint π/8 gate
+
+    // TODO: controlled on bit string
 }

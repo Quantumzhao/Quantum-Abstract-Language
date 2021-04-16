@@ -187,11 +187,11 @@ let private new_qubit (sim: QuantumSimulator) args =
         let qubit = sim.QubitManager.Allocate()
         match option with
         | 0 -> Qubit_Val qubit
-        | 1 -> Qubit_Val (Pauli_X.Run(sim, qubit).Result)
-        | 2 -> Qubit_Val (Hadamard.Run(sim, qubit).Result)
+        | 1 -> Qubit_Val (XGate.Run(sim, qubit).Result)
+        | 2 -> Qubit_Val (HGate.Run(sim, qubit).Result)
         | 3 -> 
-            let q1 = Pauli_X.Run(sim, qubit).Result
-            Qubit_Val (Hadamard.Run(sim, q1).Result)
+            let q1 = XGate.Run(sim, qubit).Result
+            Qubit_Val (HGate.Run(sim, q1).Result)
         | _ -> invalidArg "option" "no, it can't, it's surreal"
     | _ -> too_many_args_err 1 args
 
@@ -215,16 +215,16 @@ let private basic_gate sim code arg =
     // 1 qubit gates
     | Qubit_Val q :: [] -> 
         match code with
-        | "H" -> Qubit_Val (Hadamard.Run(sim, q).Result)
-        | "X" -> Qubit_Val (Pauli_X.Run(sim, q).Result)
-        | "Y" -> Qubit_Val (Pauli_Y.Run(sim, q).Result)
-        | "Z" -> Qubit_Val (Pauli_Z.Run(sim, q).Result)
+        | "H" -> Qubit_Val (HGate.Run(sim, q).Result)
+        | "X" -> Qubit_Val (XGate.Run(sim, q).Result)
+        | "Y" -> Qubit_Val (YGate.Run(sim, q).Result)
+        | "Z" -> Qubit_Val (ZGate.Run(sim, q).Result)
         | _ -> invalidArg "code" "no, it can't, it's surreal"
     // 2 qubit gates
     | Qubit_Val ctl :: Qubit_Val tgt :: [] -> 
         match code with
         | "CNOT" -> 
-            let struct(ctl', tgt') = Controlled_Pauli_X.Run(sim, ctl, tgt).Result
+            let struct(ctl', tgt') = ControlledXGate.Run(sim, ctl, tgt).Result
             Tuple_Val [Qubit_Val ctl'; Qubit_Val tgt']
         | _ -> invalidArg "code" "no, it can't, it's surreal"
     | _ -> too_many_args_err 1 arg
