@@ -148,8 +148,17 @@ let rec private print args =
         | None -> 
             Console.Write $"{m}·e^{a}iπ" |> ignore
             print tl
-    | Tuple_Val items :: tl -> 
-        not_implemented_err ()
+    | Tuple_Val items :: [] -> 
+        Console.Write "(" |> ignore
+        let rec print_rec items =
+            match items with
+            | hd :: tl -> 
+                Console.Write $"{hd} "
+                print_rec tl
+            | _ -> 
+                Console.WriteLine ")"
+        (print_rec items) |> ignore
+        Unit_Val
     | _ -> too_many_args_err 1 args
 
 /// for now, it only supprts numerical data
