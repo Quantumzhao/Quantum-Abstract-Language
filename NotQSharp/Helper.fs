@@ -2,6 +2,7 @@ module Helper
 
 open TypeDef
 
+
 let not_implemented_err () = 
     failwith "not implemented"
 
@@ -59,3 +60,52 @@ let value_equal v1 v2 =
     | Integer_Val i1, Integer_Val i2 -> i1 = i2
     | Complex_Val(m1, a1), Complex_Val(m2, a2) -> m1 = m2 && a1 = a2
     | _ -> not_implemented_err ()
+
+/// <summary>
+/// asserts if <c>value</c> contains qubits. For example, it can be a tuple containing qubits
+/// </summary>
+let rec is_quantum_data value =
+    match value with
+    | Unit_Val 
+    | String_Val _ 
+    | Complex_Val _ 
+    | Integer_Val _ 
+    | Function_Red _ 
+    | Function_Std _ -> false
+    | Array_Val _ -> false
+    | Qubit_Val _ -> true
+    | System_Val _ -> true
+    | Tuple_Val t -> List.exists is_quantum_data t
+
+/// <summary>
+/// find whether there is a tuple (string * value) in env with given binding as the string. If exist, return the corresponding value of the given binding string and return the env without that tuple. If not, return (Unit_Val, env) with env unchanged.
+/// </summary>
+let rec private find_binding binding env = 
+    List.fold (fun acc elem -> let (str, value) = elem in 
+                                    let (new_value, lst) = acc in
+                                        match new_value with
+                                        | Unit_Val -> 
+                                            if (str.Equals(binding)) then 
+                                                (value, lst)
+                                            else
+                                                (new_value,(elem :: lst))  
+                                        | _ -> (new_value,(elem :: lst))) (Unit_Val, []) env 
+    // match env with
+    // |h :: t -> let (str, value) = h in if (str.Equals(binding)) then (value, true) else (find_binding t binding)
+    // |[] -> (Unit_Val, false)
+
+/// <summary>
+/// If a binding exist in env and the corresponding value is a quantum data type, then delete this binding tuple in env and return the corresponding value. Otherwise, return (Unit_Val, env) with env unchanged.
+/// </summary>
+let eliminate_q binding env =
+    let (result_value, new_env) = (find_binding binding env) in
+        if (is_quantum_data result_value) then (result_value, new_env) else (Unit_Val, env)
+
+/// <summary>
+/// Add a bind_tuple into environment, since this is too easy, there might be an misunderstanding. 
+/// </summary>            
+let reinsert_q bind_tuple env =
+    (bind_tuple :: env)
+
+
+

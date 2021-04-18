@@ -8,20 +8,23 @@ Needs inquiry:
 
 # TODO
 
-- [x] a fully functional lexer
+- [ ] a fully functional lexer
   - [x] support line comment
   - [x] support string
   - [x] full support of symbol lexing
+  - [ ] negative integer
 - [x] parser
   - [X] apply
   - [X] tuple
   - [X] tuple, apply without Paren
   - [X] support string
   - [x] other
+  - [ ] negative integer
 - [ ] interpreter
   - [ ] qubit management
   - [ ] `controlled` implementation
   - [ ] `adjoint` implementation
+  - [ ] negative interger
   - [x] other
 - [ ] standard library
   - [ ] some necessary functions

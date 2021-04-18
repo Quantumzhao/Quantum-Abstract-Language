@@ -32,9 +32,9 @@ let tok inputraw =
             let Space_m =
                 Regex("[ \n\r\x0c\t]+").Match(input, 0, 1)
 
-            let Decimal_m = Regex("^[0-9]+\.[0-9]+").Match(input)
+            let Decimal_m = Regex("^-?[0-9]+\.[0-9]+").Match(input)
 
-            let Integer_m = Regex("^[0-9]+").Match(input)
+            let Integer_m = Regex("^-?[0-9]+").Match(input)
 
             let Mis_m =
                 Regex("^[a-zA-Z_][a-zA-Z0-9_']*").Match(input)
@@ -55,11 +55,19 @@ let tok inputraw =
             if (Space_m.Success) then
                 tokenize (input.Substring(1)) (pos + 1)
             elif (Decimal_m.Success) then
-                Decimal(decimal Decimal_m.Value)
-                :: (tokenize (input.Substring(Decimal_m.Value.Length)) (pos + Decimal_m.Value.Length))
+                if (Decimal_m.Value.[0].Equals("-")) then 
+                    Decimal((decimal 0) - (decimal Decimal_m.Value))
+                    :: (tokenize (input.Substring(Decimal_m.Value.Length)) (pos + Decimal_m.Value.Length)) 
+                else
+                    Decimal(decimal Decimal_m.Value)
+                    :: (tokenize (input.Substring(Decimal_m.Value.Length)) (pos + Decimal_m.Value.Length))
             elif (Integer_m.Success) then
-                (Integer(int Integer_m.Value))
-                :: (tokenize (input.Substring(Integer_m.Value.Length)) (pos + Integer_m.Value.Length))
+                if (Integer_m.Value.[0].Equals("-")) then 
+                    (Integer(0 - (int Integer_m.Value)))
+                    :: (tokenize (input.Substring(Integer_m.Value.Length)) (pos + Integer_m.Value.Length))
+                else
+                    (Integer(int Integer_m.Value))
+                    :: (tokenize (input.Substring(Integer_m.Value.Length)) (pos + Integer_m.Value.Length))
             elif (Mis_m.Success) then
                 // Tokens with alphabets, it will otherwise be Identifier
                 if Mis_m.Value.Equals("let")
@@ -100,6 +108,7 @@ let tok inputraw =
             elif (Comment_m.Success) then
                 (tokenize (input.Substring(Comment_m.Value.Length)) (pos + Comment_m.Value.Length))
             elif (String_m.Success) then
+                // Take the string inside "",  that is from the index 1 of the string to the last second
                 String(String_m.Value.[1..(String_m.Value.Length - 2)]) :: (tokenize (input.Substring(String_m.Value.Length)) (pos + String_m.Value.Length))
             else
                 // The error message could only return the position of which character has matching issue, might need further ammendement
