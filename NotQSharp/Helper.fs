@@ -2,7 +2,6 @@ module Helper
 
 open TypeDef
 
-
 let not_implemented_err () = 
     failwith "not implemented"
 
@@ -81,31 +80,47 @@ let rec is_quantum_data value =
 /// find whether there is a tuple (string * value) in env with given binding as the string. If exist, return the corresponding value of the given binding string and return the env without that tuple. If not, return (Unit_Val, env) with env unchanged.
 /// </summary>
 let rec private find_binding binding env = 
-    List.fold (fun acc elem -> let (str, value) = elem in 
-                                    let (new_value, lst) = acc in
-                                        match new_value with
-                                        | Unit_Val -> 
-                                            if (str.Equals(binding)) then 
-                                                (value, lst)
-                                            else
-                                                (new_value,(elem :: lst))  
-                                        | _ -> (new_value,(elem :: lst))) (Unit_Val, []) env 
+    let result_value, new_env, found = 
+        let remove_single (new_value, lst, found) elem = 
+            let str, value = elem in
+                if found then (new_value,(elem :: lst), found) else 
+                    if (str = binding) then 
+                        (value, lst, true)
+                    else
+                        (new_value,(elem :: lst),found)
+        (List.fold remove_single (Unit_Val, [], false) env) in 0
     // match env with
     // |h :: t -> let (str, value) = h in if (str.Equals(binding)) then (value, true) else (find_binding t binding)
     // |[] -> (Unit_Val, false)
 
+let rec find_defined env name =
+    let rec find_defined_rec next_env name prev_env =
+        match next_env with
+        | (entry_name, value) :: _ when entry_name = name -> value, List.append prev_env next_env
+        | first :: rest -> find_defined_rec rest name (List.append prev_env [first])
+        | [] -> failwith $"{name} is not found in environment!"
+    find_defined_rec env name []
+
 /// <summary>
-/// If a binding exist in env and the corresponding value is a quantum data type, then delete this binding tuple in env and return the corresponding value. Otherwise, return (Unit_Val, env) with env unchanged.
+/// If a binding exist in env and the corresponding value is a quantum data type, then delete this binding tuple in env and return the corresponding value with new environment as a tuple. Otherwise, return the corresponding value and env tuple with env unchanged
 /// </summary>
-let eliminate_q binding env =
-    let (result_value, new_env) = (find_binding binding env) in
-        if (is_quantum_data result_value) then (result_value, new_env) else (Unit_Val, env)
+let find_variable binding env =
+    let result_value, new_env = find_defined env binding
+    if is_quantum_data result_value then result_value, new_env
+    else
+        result_value, env
 
 /// <summary>
 /// Add a bind_tuple into environment, since this is too easy, there might be an misunderstanding. 
 /// </summary>            
 let reinsert_q bind_tuple env =
     (bind_tuple :: env)
+
+let rec extract_value lst =
+    match lst with
+    | h :: t -> let value, env = h
+                value :: extract_value t
+    | [] -> []
 
 
 
