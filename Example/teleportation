@@ -27,7 +27,8 @@ let telep =
         (f, g)
 in
 
-let msg = (H (new 0)) in
+ //let msg = (H (new 0)) in
+let msg = (H (new 1)) in
 match telep with
 | f, g -> 
     match (f msg) with

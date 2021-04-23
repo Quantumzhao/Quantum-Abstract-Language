@@ -45,6 +45,11 @@
     }
 
     // TODO: controlled hadamard
+    operation ControlledHGate (control: Qubit, target: Qubit) 
+    : (Qubit, Qubit) {
+        CNOT(control, target);
+        return (control, target);
+    }
     // Also please follow the naming conventions and function signatures
 
     operation XGate (target: Qubit) : Qubit {
@@ -64,29 +69,78 @@
     }
 
     // TODO: controlled Y
+    operation ControlledYGate(control: Qubit, target: Qubit)
+    :   (Qubit, Qubit) {
+        CNOT(control, target);
+        return (control, target);
+    }
 
     // TODO: adjoint Y
-
+    operation AdjointY (target: Qubit) : Qubit {
+        Y(target);
+        return target;
+    }
+    // ZGate
     operation ZGate (target: Qubit) : Qubit {
         Z(target);
         return target;
     }
 
     // TODO: controlled Z
+    operation ControlledZGate(control: Qubit, target: Qubit)
+    :   (Qubit, Qubit) {
+        CNOT(control, target);
+        return (control, target);
+    }
 
     // TODO: adjoint Z
+    operation AdjointZ (target: Qubit) : Qubit {
+        Z(target);
+        return target;
+    }
 
     // TODO: phase (S gate)
+     operation SGate (target: Qubit) : Qubit {
+        S(target);
+        return target;
+    }
 
     // TODO: controlled phase
+    operation ControlledSGate(control: Qubit, target: Qubit)
+    :   (Qubit, Qubit) {
+        CNOT(control, target);
+        return (control, target);
+    }
 
     // TODO: adjoint phase
+    operation AdjointS (target: Qubit) : Qubit {
+        S(target);
+        return target;
+    }
 
     // TODO: π/8 gate
+     operation PhiGate (target: Qubit) : Qubit {
+        Phi(target);
+        return target;
+    }
 
     // TODO: controlled π/8 gate
+    operation ControlledPhiGate(control: Qubit, target: Qubit)
+    :   (Qubit, Qubit) {
+        CNOT(control, target);
+        return (control, target);
+    }
 
     // TODO: adjoint π/8 gate
+    operation adjointPhi (target: Qubit) : Qubit {
+        Phi(target);
+        return target;
+    }
 
     // TODO: controlled on bit string
+    operation ControlledOnBitStringGate(control: Qubit, target: Qubit)
+    :   (Qubit, Qubit) {
+        CNOT(control, target);
+        return (control, target);
+    }
 }
