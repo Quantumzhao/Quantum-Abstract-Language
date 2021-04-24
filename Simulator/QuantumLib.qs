@@ -47,7 +47,7 @@
     // TODO: controlled hadamard use the cont
     operation ControlledHGate (control: Qubit, target: Qubit) 
     : (Qubit, Qubit) {
-        CH(control, target);
+        //CH(control, target);
         return (control, target);
     }
     // Also please follow the naming conventions and function signatures
@@ -110,7 +110,7 @@
     // TODO: controlled phase
     operation ControlledSGate(control: Qubit, target: Qubit)
     :   (Qubit, Qubit) {
-        CS(control, target);
+        //CS(control, target);
         return (control, target);
     }
 
@@ -129,7 +129,7 @@
     // TODO: controlled π/8 gate
     operation ControlledTGate(control: Qubit, target: Qubit)
     :   (Qubit, Qubit) {
-        CT(control, target);
+        //CT(control, target);
         return (control, target);
     }
 
@@ -143,7 +143,7 @@
     //I look over don see it the symbol
     operation ControlledOnBitStringGate(control: Qubit, target: Qubit)
     :   (Qubit, Qubit) {
-        COBS(control, target);
+        //COBS(control, target);
         return (control, target);
     }
 }
