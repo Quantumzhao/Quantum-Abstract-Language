@@ -44,14 +44,16 @@
         return target;
     }
 
-    // TODO: controlled hadamard
+    // TODO: controlled hadamard use the cont
     operation ControlledHGate (control: Qubit, target: Qubit) 
     : (Qubit, Qubit) {
-        CNOT(control, target);
+        CH(control, target);
         return (control, target);
     }
     // Also please follow the naming conventions and function signatures
-
+    //for the adjoint the notation on the Gates are hard
+    // I dont know how I will incorporate it here. 
+    // i checked on the docs.microsoft.com i dont see it
     operation XGate (target: Qubit) : Qubit {
         X(target);
         return target;
@@ -59,7 +61,7 @@
 
     operation ControlledXGate (control: Qubit, target: Qubit) 
     : (Qubit, Qubit) {
-        CNOT(control, target);
+        CX(control, target);
         return (control, target);
     }
 
@@ -71,7 +73,7 @@
     // TODO: controlled Y
     operation ControlledYGate(control: Qubit, target: Qubit)
     :   (Qubit, Qubit) {
-        CNOT(control, target);
+        CY(control, target);
         return (control, target);
     }
 
@@ -89,7 +91,7 @@
     // TODO: controlled Z
     operation ControlledZGate(control: Qubit, target: Qubit)
     :   (Qubit, Qubit) {
-        CNOT(control, target);
+        CZ(control, target);
         return (control, target);
     }
 
@@ -108,7 +110,7 @@
     // TODO: controlled phase
     operation ControlledSGate(control: Qubit, target: Qubit)
     :   (Qubit, Qubit) {
-        CNOT(control, target);
+        CS(control, target);
         return (control, target);
     }
 
@@ -119,28 +121,29 @@
     }
 
     // TODO: π/8 gate
-     operation PhiGate (target: Qubit) : Qubit {
-        Phi(target);
+     operation TGate (target: Qubit) : Qubit {
+        T(target);
         return target;
     }
 
     // TODO: controlled π/8 gate
-    operation ControlledPhiGate(control: Qubit, target: Qubit)
+    operation ControlledTGate(control: Qubit, target: Qubit)
     :   (Qubit, Qubit) {
-        CNOT(control, target);
+        CT(control, target);
         return (control, target);
     }
 
     // TODO: adjoint π/8 gate
-    operation adjointPhi (target: Qubit) : Qubit {
-        Phi(target);
+    operation adjointT (target: Qubit) : Qubit {
+        T(target);
         return target;
     }
 
     // TODO: controlled on bit string
+    //I look over don see it the symbol
     operation ControlledOnBitStringGate(control: Qubit, target: Qubit)
     :   (Qubit, Qubit) {
-        CNOT(control, target);
+        COBS(control, target);
         return (control, target);
     }
 }
