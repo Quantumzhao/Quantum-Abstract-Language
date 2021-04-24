@@ -1,3 +1,5 @@
-match (0, (add 0.1 -1.1)) with
-| 0, -1.0 -> -100.12343
-| _, _ -> (print -1.0)
+let q = ((new 0), 0) in
+match q with
+| b, 1 -> b
+| a, 0 -> a
+| _ -> 0

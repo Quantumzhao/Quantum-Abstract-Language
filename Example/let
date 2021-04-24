@@ -1,2 +1,24 @@
-let function x y z = x in
-42.0
+//let function x y z = x in
+//let q = (new 0) in
+let a = (new 0) in
+((H a), (H a))
+//let f x y = x + (measure q) + (mesaure c) in
+//let g x a = x + (measure q) + (measure a) in
+//(f a q)
+
+//let ... =
+//env = [...]
+//    let tup =
+//        let q1 = ...
+//        let q2 = ...
+//        let f ... =
+//            q2
+//        let g ... =
+//            q2
+//        (f, g)
+//    //env = [tup, ...]
+//    let f, g = tup
+    //env = [f,g,tup,...]
+//    f ..., 
+    
+//   g ...

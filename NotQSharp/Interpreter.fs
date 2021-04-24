@@ -7,10 +7,16 @@ open Microsoft.Quantum.Simulation.Simulators
 open Microsoft.Quantum.Simulation.Core
 
 // TODO: qubit support
+/// <summary>
+/// If a binding exist in env and the corresponding value is a quantum data type, then change the the flag in the binding to true and return the corresponding value. Otherwise, just return the corresponding value.
+/// </summary>
 let rec find_defined env name =
     match env with
-    | (entry_name, value) :: _ when entry_name = name -> Some value
-    | _ :: rest -> find_defined rest name
+    | (entry_name, value, flag) :: _ when entry_name = name -> 
+        if !flag then failwith $"The quantum varible: '{entry_name}' can not be used again!" 
+        elif is_quantum_data value then let _ = flag := true in Some value
+        else Some value
+    | first :: rest -> find_defined rest name
     | [] -> None
 
 /// <summary>
@@ -19,7 +25,7 @@ let rec find_defined env name =
 /// <param name="env">environment</param>
 /// <param name="sim">simulator</param>
 /// <param name="exp">expression</param>
-let rec interp env sim exp = 
+let rec interp (env: (string * Value * (bool ref)) list) sim exp = 
     match exp with
     // interp values
     | Integer i -> Integer_Val i
@@ -31,7 +37,16 @@ let rec interp env sim exp =
     | System qexps -> interp_system env sim qexps
     | Tuple exps -> interp_tuple env sim exps
     // interp references
-    | Variable v -> 
+    | Variable v -> interp_variable env sim v
+    // interp syntax structure
+    | Apply(func, args) -> interp_apply env sim func args
+    | Let_Fun(name, ps, body, in_expr) -> interp_let_fun env sim name ps body in_expr
+    | Let_Var(name, binding, in_expr) -> interp_let_var env sim name binding in_expr
+    | Match(cond, cases) -> interp_match env sim cond cases
+    | Unit -> Unit_Val
+    | _ -> failwith "it's not possible!"
+
+and interp_variable env (sim: QuantumSimulator) v =
         // first try to find variable and function in environment
         match find_defined env v with
         | Some value -> value
@@ -42,13 +57,6 @@ let rec interp env sim exp =
             // if find nothing, then the variable is either not in scope at all 
             // or it is a qubit and its ownership has been transfered
             | None -> failwith $"{v} does not exist in the current space-time frame"
-    // interp syntax structure
-    | Apply(func, args) -> interp_apply env sim func args
-    | Let_Fun(name, ps, body, in_expr) -> interp_let_fun env sim name ps body in_expr
-    | Let_Var(name, binding, in_expr) -> interp_let_var env sim name binding in_expr
-    | Match(cond, cases) -> interp_match env sim cond cases
-    | Unit -> Unit_Val
-    | _ -> failwith "it's not possible!"
 
 // TODO: qubit support
 and interp_array env sim exps =
@@ -76,13 +84,13 @@ and interp_let_fun env sim name ps body in_expr =
     // put all info into the reduced function without changing anything
     // since here it follows call by name
     let fun_red = Function_Red(name, env, ps, body)
-    let new_env = (name, fun_red) :: env
+    let new_env = (name, fun_red, ref false) :: env
     interp new_env sim in_expr
 
 // TODO: qubit support
 and interp_let_var env sim name exp in_expr =
     let res = interp env sim exp
-    let new_env = (name, res) :: env
+    let new_env = (name, res, ref false) :: env
     interp new_env sim in_expr
 
 // not sure if it is compatible with qubits
@@ -95,13 +103,13 @@ and interp_apply env sim func args =
         // first evaluate all the arguments
         let eval'ed_args = List.map (interp env sim) args
         // then pair them with parameters
-        let param_arg_pair = List.zip ps eval'ed_args
-        let fun_n_pa_pair = (name, id) :: param_arg_pair
+        let param_arg_pair = List.map (fun (a, b) -> a,b,ref false) (List.zip ps eval'ed_args)
+        let fun_n_pa_pair = (name, id, ref false) :: param_arg_pair
         // pack into a set of environment
         // sorta hack, should replace it if there's any better way
         let new_env = List.append fun_n_pa_pair closure
         interp new_env sim body
-    | Function_Std(_, func) -> call_std_by_value (interp env sim) func args
+    | Function_Std(_, func) -> call_std (interp env sim) func args
     | Function_Red(_, _, ps, _) -> 
         failwith $"argument number mismatch: expect {ps.Length}, actual {args.Length}"
     | other when args.Length <> 0 -> 
@@ -124,7 +132,7 @@ and interp_match env sim cond cases =
             match pattern with
             | Placeholder p -> 
                 // put the value of condition expression in the environment
-                let new_env = (p, cond) :: env
+                let new_env = (p, cond, ref false) :: env
                 // evaluate the branch
                 interp new_env sim expr
             | WildCard -> interp env sim expr
@@ -156,7 +164,7 @@ and interp_match env sim cond cases =
                 let fill_in_pattern (pattern, value) accumulator = 
                     match pattern with
                     // meaningful binding
-                    | Placeholder p -> (p, value) :: accumulator
+                    | Placeholder p -> (p, value, ref false) :: accumulator
                     | _ -> accumulator
                 // if this tuple of values indeed satidfies the pattern
                 if List.fold (fun acc x -> acc && (match_rule x)) true p_v_pair then

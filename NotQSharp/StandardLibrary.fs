@@ -38,7 +38,7 @@ let public find_variable name =
 /// <param name="interp_w_env">an interpret function that has been partially applied with environment</param>
 /// <param name="func">the already-partially-applied standard library function</param>
 /// <param name="args">arguments of the function</param>
-let public call_std_by_value interp_w_env func args =
+let public call_std interp_w_env func args =
     let values = List.map interp_w_env args
     func values
 
@@ -400,17 +400,18 @@ let private index args =
         not_implemented_err ()
     | _ -> too_many_args_err 2 args
 
-let private map interp_w_env (args: Expr list) =
-    let to_collection list =
+let private map sim interp (args: Value list) =
+    let to_expr_list list =
         match list with
-        | System_Val s -> s
-        | Array_Val a -> a
+        | System_Val s -> List.map Literal s
+        | Array_Val a -> List.map Literal a
         | _ -> invalidArg "list" "not a collection"
     match args with
     | func :: collec :: [] ->
-        let eval'ed_collec = collec |> interp_w_env |> to_collection
-        let apply_2_ele e = Apply(func, [Literal e])
-        List.map (apply_2_ele >> interp_w_env) eval'ed_collec
+        let eval'ed_collec = to_expr_list collec
+        let apply_2_ele e = Apply(Literal func, [e])
+        let final_collec = List.map (apply_2_ele >> (interp [] sim)) eval'ed_collec
+        Array_Val final_collec
     (*| Function_Std(name, body) :: list :: [] -> 
         List.map (fun arg -> body [arg]) (to_collection list)
     | Function_Red(name, closure, ps, body) :: list :: [] -> 
@@ -421,10 +422,10 @@ let private map interp_w_env (args: Expr list) =
 /// try to find a variable/standard libray function by the given name
 /// </summary>
 /// <param name="sim">the reference to quantum simulator</param>
-/// <param name="interp">the interp functino with environment</param>
+/// <param name="interp">the interp function with environment</param>
 /// <param name="name">name of the target</param>
 /// <returns><c>None</c> if it doesn't exist. Otherwise returns something</returns>
-let public find sim interp name =
+let public find sim (interp: 'a list -> QuantumSimulator -> Expr -> Value) name =
     match find_variable name with
     | Some v -> Some v
     | None -> 
@@ -438,6 +439,7 @@ let public find sim interp name =
         | "head_n_tail" -> Some (Function_Std(name, head_n_tail))
         | "last" -> Some (Function_Std(name, last))
         | "range" -> Some (Function_Std(name, range))
+        | "map" -> Some (Function_Std(name, (map sim interp)))
         // qubit operations
         | "new" -> Some (Function_Std(name, (new_qubit sim)))
         | "Qubits" -> Some (Function_Std(name, (new_qubits sim)))

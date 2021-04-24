@@ -93,22 +93,17 @@ let rec private find_binding binding env =
     // |h :: t -> let (str, value) = h in if (str.Equals(binding)) then (value, true) else (find_binding t binding)
     // |[] -> (Unit_Val, false)
 
-let rec find_defined env name =
-    let rec find_defined_rec next_env name prev_env =
-        match next_env with
-        | (entry_name, value) :: _ when entry_name = name -> value, List.append prev_env next_env
-        | first :: rest -> find_defined_rec rest name (List.append prev_env [first])
-        | [] -> failwith $"{name} is not found in environment!"
-    find_defined_rec env name []
-
 /// <summary>
-/// If a binding exist in env and the corresponding value is a quantum data type, then delete this binding tuple in env and return the corresponding value with new environment as a tuple. Otherwise, return the corresponding value and env tuple with env unchanged
+/// If a binding exist in env and the corresponding value is a quantum data type, then change the the flag in the binding to true and return the corresponding value. Otherwise, just return the corresponding value.
 /// </summary>
-let find_variable binding env =
-    let result_value, new_env = find_defined env binding
-    if is_quantum_data result_value then result_value, new_env
-    else
-        result_value, env
+let rec find_variable env name =
+    match env with
+    | (entry_name, value, flag) :: _ when entry_name = name -> 
+        if !flag then failwith $"{entry_name} can not be used again!" 
+        elif is_quantum_data value then let _ = flag := true in Some value
+        else Some value
+    | first :: rest -> find_variable rest name
+    | [] -> None
 
 /// <summary>
 /// Add a bind_tuple into environment, since this is too easy, there might be an misunderstanding. 

@@ -14,12 +14,17 @@ open Interpreter
 [<EntryPoint>]
 let main argv =
     let dir = Directory.GetCurrentDirectory()
-    let tokens = lexer (dir + "/../Example/fibonacci")
+    let tokens = lexer (dir + "/../Example/match")
     let expr, _ = parse tokens
     use sim = new QuantumSimulator()
-    let res = interp [] sim expr
     // Console.WriteLine "Hello"
-    //Console.WriteLine(pretty_print tokens)
-    //Console.WriteLine(pretty_draw expr)
-    Console.WriteLine res
-    0 // return an integer exit code
+    Console.WriteLine(pretty_print tokens)
+    Console.WriteLine(pretty_draw expr)
+    try
+        let res = interp [] sim expr
+        Console.WriteLine res
+        0
+    with
+    | e -> 
+        Console.WriteLine e.Message
+        0
