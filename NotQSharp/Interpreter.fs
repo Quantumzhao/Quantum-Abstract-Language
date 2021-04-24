@@ -44,7 +44,8 @@ let rec interp (env: (string * Value * (bool ref)) list) sim exp =
     | Let_Var(name, binding, in_expr) -> interp_let_var env sim name binding in_expr
     | Match(cond, cases) -> interp_match env sim cond cases
     | Unit -> Unit_Val
-    | _ -> failwith "it's not possible!"
+    | Literal v -> v
+    //| _ -> failwith "it's not possible!"
 
 and interp_variable env (sim: QuantumSimulator) v =
         // first try to find variable and function in environment

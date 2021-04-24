@@ -412,10 +412,6 @@ let private map sim interp (args: Value list) =
         let apply_2_ele e = Apply(Literal func, [e])
         let final_collec = List.map (apply_2_ele >> (interp [] sim)) eval'ed_collec
         Array_Val final_collec
-    (*| Function_Std(name, body) :: list :: [] -> 
-        List.map (fun arg -> body [arg]) (to_collection list)
-    | Function_Red(name, closure, ps, body) :: list :: [] -> 
-        not_implemented_err ()*)
     | _ -> not_implemented_err ()
 
 /// <summary>

@@ -14,7 +14,7 @@ open Interpreter
 [<EntryPoint>]
 let main argv =
     let dir = Directory.GetCurrentDirectory()
-    let tokens = lexer (dir + "/../Example/match")
+    let tokens = lexer (dir + "/../Example/high order")
     let expr, _ = parse tokens
     use sim = new QuantumSimulator()
     // Console.WriteLine "Hello"
