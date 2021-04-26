@@ -2,7 +2,6 @@
 
 Needs inquiry:
 
-- quantum closure
 - how to verify a unitary operation programmatically
 - how to implement rational exponent of unitary operators
 
@@ -20,10 +19,8 @@ Needs inquiry:
   - [X] support string
   - [x] other
   - [X] negative integer
-- [ ] interpreter
-  - [ ] qubit management
-  - [ ] `controlled` implementation
-  - [ ] `adjoint` implementation
+- [X] interpreter
+  - [X] qubit management
   - [x] other
 - [ ] standard library
   - [ ] `pow`
@@ -89,7 +86,7 @@ See `./Example`
   
 - [x] name
 
-  > probably QAML
+  > QML
 
 - [X] call by name
 
@@ -123,7 +120,7 @@ For example, the following common features are missing:
 
 However, it does have good support for quantum data types and qubit operations, which will be discussed in detail in the following sections. 
 
-We use [F# XML documentation](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/xml-documentation)
+<!-- We use [F# XML documentation](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/xml-documentation) -->
 
 ### No-cloning Theorem
 
@@ -144,7 +141,7 @@ Otherwise,  disastrous scenarios like this may happen:
 
 ```F#
 let q = qubit in
-	CNOT q qubit
+CNOT q qubit
 ```
 
 The `CNOT` gate operates on two same qubits which is unthinkable in quantum computing. 
@@ -203,14 +200,14 @@ For the formal definition of this block, please see the source code.
 
 ```F#
 let x = 0 in
-	...
+...
 ```
 
 #### Function declaration
 
 ```F#
 let id x = x in
-	...
+...
 ```
 
 #### Tuple deconstruction and multi-variable binding
@@ -219,21 +216,21 @@ The basic form is like this:
 
 ```F#
 let a, b = tuple in
-	...
+...
 ```
 
 However, it is also possible to use wildcard
 
 ```f#
 let a, _ = tuple in
-	...
+...
 ```
 
 And even further: 
 
 ```f#
 let _, _ = tuple in
-	...
+...
 ```
 
 > Note that the `in` keyword cannot be omitted. 
