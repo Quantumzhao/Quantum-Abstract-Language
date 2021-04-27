@@ -70,52 +70,8 @@ let rec is_quantum_data value =
     | Complex_Val _ 
     | Integer_Val _ 
     | Function_Red _ 
-    | Function_Std _ -> false
+    | Function_Std _
     | Array_Val _ -> false
-    | Qubit_Val _ -> true
+    | Qubit_Val _
     | System_Val _ -> true
     | Tuple_Val t -> List.exists is_quantum_data t
-
-/// <summary>
-/// find whether there is a tuple (string * value) in env with given binding as the string. If exist, return the corresponding value of the given binding string and return the env without that tuple. If not, return (Unit_Val, env) with env unchanged.
-/// </summary>
-let rec private find_binding binding env = 
-    let result_value, new_env, found = 
-        let remove_single (new_value, lst, found) elem = 
-            let str, value = elem in
-                if found then (new_value,(elem :: lst), found) else 
-                    if (str = binding) then 
-                        (value, lst, true)
-                    else
-                        (new_value,(elem :: lst),found)
-        (List.fold remove_single (Unit_Val, [], false) env) in 0
-    // match env with
-    // |h :: t -> let (str, value) = h in if (str.Equals(binding)) then (value, true) else (find_binding t binding)
-    // |[] -> (Unit_Val, false)
-
-/// <summary>
-/// If a binding exist in env and the corresponding value is a quantum data type, then change the the flag in the binding to true and return the corresponding value. Otherwise, just return the corresponding value.
-/// </summary>
-let rec find_variable env name =
-    match env with
-    | (entry_name, value, flag) :: _ when entry_name = name -> 
-        if !flag then failwith $"{entry_name} can not be used again!" 
-        elif is_quantum_data value then let _ = flag := true in Some value
-        else Some value
-    | first :: rest -> find_variable rest name
-    | [] -> None
-
-/// <summary>
-/// Add a bind_tuple into environment, since this is too easy, there might be an misunderstanding. 
-/// </summary>            
-let reinsert_q bind_tuple env =
-    (bind_tuple :: env)
-
-let rec extract_value lst =
-    match lst with
-    | h :: t -> let value, env = h
-                value :: extract_value t
-    | [] -> []
-
-
-

@@ -6,7 +6,6 @@ open Helper
 open DecimalMath
 open QuantumLib
 open TypeDef
-open DecimalMath
 open Microsoft.Quantum.Canon
 open Microsoft.Quantum.Simulation.Simulators
 
@@ -24,7 +23,7 @@ let private e = Complex_Val(DecimalEx.E, 0m)
 
 let private i = Complex_Val(1m, DecimalEx.Pi)
 
-let public find_variable name =
+let private find_variable name =
     match name with
     | "pi" -> Some pi
     | "e" -> Some e
@@ -175,7 +174,6 @@ let private equals args =
     | _ -> too_many_args_err 2 args
 
 // =============== Quantum Part ==================
-// require refactor in the future
 
 /// allocate a new composite system
 let private new_qubits (sim: QuantumSimulator) arg =
@@ -421,7 +419,7 @@ let private map sim interp (args: Value list) =
 /// <param name="interp">the interp function with environment</param>
 /// <param name="name">name of the target</param>
 /// <returns><c>None</c> if it doesn't exist. Otherwise returns something</returns>
-let public find sim (interp: 'a list -> QuantumSimulator -> Expr -> Value) name =
+let public find_std sim (interp: 'a list -> QuantumSimulator -> Expr -> Value) name =
     match find_variable name with
     | Some v -> Some v
     | None -> 
