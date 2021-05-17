@@ -6,7 +6,6 @@ open Helper
 open DecimalMath
 open QuantumLib
 open TypeDef
-open DecimalMath
 open Microsoft.Quantum.Canon
 open Microsoft.Quantum.Simulation.Simulators
 
@@ -24,7 +23,7 @@ let private e = Complex_Val(DecimalEx.E, 0m)
 
 let private i = Complex_Val(1m, DecimalEx.Pi)
 
-let public find_variable name =
+let private find_variable name =
     match name with
     | "pi" -> Some pi
     | "e" -> Some e
@@ -175,7 +174,6 @@ let private equals args =
     | _ -> too_many_args_err 2 args
 
 // =============== Quantum Part ==================
-// require refactor in the future
 
 /// allocate a new composite system
 let private new_qubits (sim: QuantumSimulator) arg =
@@ -258,7 +256,7 @@ let rec private is_quantum_data value =
 
 /// <summary>raise the base to a specified power. Same for functions</summary>
 /// <remarks>the power cannot be negative</remarks>
-let private pow interp_w_env args =
+let private pow interp_w_sim args =
     match args with
     | Integer_Val basei :: Integer_Val power :: [] -> 
         let res = DecimalEx.Pow(decimal basei, decimal power)
@@ -267,26 +265,6 @@ let private pow interp_w_env args =
         let m' = DecimalEx.Pow(m, decimal i)
         let a' = DecimalEx.Pow(a, decimal i)
         Complex_Val(m', a')
-    (*| Function_Red(name, env, ps, body) :: Integer_Val power :: [] ->
-        let rec rec_pow (op : 'a -> 'a) pow : ('a -> 'a) =
-            if pow = 0 then
-                fun x -> x
-            else
-                fun x -> op ((rec_pow op (pow - 1)) x)
-        if power < 0 then
-            not_implemented_err ()
-        else
-            not_implemented_err ()
-    | Function_Std(name, body) :: Integer_Val power :: [] -> 
-        let rec rec_pow (op : 'a -> 'a) pow : ('a -> 'a) =
-            if pow = 0 then
-                fun x -> x
-            else
-                fun x -> op ((rec_pow op (pow - 1)) x)
-        if power < 0 then
-            not_implemented_err ()
-        else
-            (fun arg -> )*)
     | _ -> too_many_args_err 2 args
 
 /// gives off a binary vector space of rank n.
@@ -400,7 +378,7 @@ let private index args =
         not_implemented_err ()
     | _ -> too_many_args_err 2 args
 
-let private map sim interp (args: Value list) =
+let private map interp_w_sim (args: Value list) =
     let to_expr_list list =
         match list with
         | System_Val s -> List.map Literal s
@@ -410,8 +388,21 @@ let private map sim interp (args: Value list) =
     | func :: collec :: [] ->
         let eval'ed_collec = to_expr_list collec
         let apply_2_ele e = Apply(Literal func, [e])
-        let final_collec = List.map (apply_2_ele >> (interp [] sim)) eval'ed_collec
+        let final_collec = List.map (apply_2_ele >> interp_w_sim) eval'ed_collec
         Array_Val final_collec
+    | _ -> not_implemented_err ()
+
+let private fold (interp_w_sim: Expr -> Value) (args: Value list) =
+    let to_expr_list list =
+        match list with
+        | System_Val s -> List.map Literal s
+        | Array_Val a -> List.map Literal a
+        | _ -> invalidArg "list" "not a collection"
+    match args with
+    | func :: accumulator :: collec :: [] ->
+        let eval'ed_collec = to_expr_list collec
+        let apply_2_ele acc e = Apply(Literal func, [Literal acc; e])
+        List.fold (fun acc x -> interp_w_sim (apply_2_ele acc x)) accumulator eval'ed_collec
     | _ -> not_implemented_err ()
 
 /// <summary>
@@ -421,7 +412,7 @@ let private map sim interp (args: Value list) =
 /// <param name="interp">the interp function with environment</param>
 /// <param name="name">name of the target</param>
 /// <returns><c>None</c> if it doesn't exist. Otherwise returns something</returns>
-let public find sim (interp: 'a list -> QuantumSimulator -> Expr -> Value) name =
+let public find_std sim (interp: 'a list -> QuantumSimulator -> Expr -> Value) name =
     match find_variable name with
     | Some v -> Some v
     | None -> 
@@ -435,7 +426,8 @@ let public find sim (interp: 'a list -> QuantumSimulator -> Expr -> Value) name 
         | "head_n_tail" -> Some (Function_Std(name, head_n_tail))
         | "last" -> Some (Function_Std(name, last))
         | "range" -> Some (Function_Std(name, range))
-        | "map" -> Some (Function_Std(name, (map sim interp)))
+        | "map" -> Some (Function_Std(name, (map (interp [] sim))))
+        | "fold" -> Some (Function_Std(name, (fold (interp [] sim))))
         // qubit operations
         | "new" -> Some (Function_Std(name, (new_qubit sim)))
         | "Qubits" -> Some (Function_Std(name, (new_qubits sim)))

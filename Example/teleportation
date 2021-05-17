@@ -32,4 +32,4 @@ let msg = (new 1) in
 match telep with
 | f, g -> 
     match (f msg) with
-    | z_power, x_power -> (measure (g x_power z_power))
+    | z_power, x_power -> (measure (H (g x_power z_power)))

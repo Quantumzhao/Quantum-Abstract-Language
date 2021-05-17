@@ -4,19 +4,23 @@ open TypeDef
 open Helper
 open StandardLibrary
 open Microsoft.Quantum.Simulation.Simulators
-open Microsoft.Quantum.Simulation.Core
 
-// TODO: qubit support
 /// <summary>
-/// If a binding exist in env and the corresponding value is a quantum data type, then change the the flag in the binding to true and return the corresponding value. Otherwise, just return the corresponding value.
+/// If a binding exist in env and the corresponding value is a quantum data type, 
+/// then change the the flag in the binding to true and return the corresponding value. 
+/// Otherwise, just return the corresponding value.
 /// </summary>
 let rec find_defined env name =
     match env with
     | (entry_name, value, flag) :: _ when entry_name = name -> 
-        if !flag then failwith $"The quantum varible: '{entry_name}' can not be used again!" 
-        elif is_quantum_data value then let _ = flag := true in Some value
+        if !flag then 
+            failwith $"The quantum varible: '{entry_name}' can not be used again!" 
+        elif is_quantum_data value then 
+            flag := true
+            Some value
         else Some value
-    | first :: rest -> find_defined rest name
+    | _ :: rest -> 
+        find_defined rest name
     | [] -> None
 
 /// <summary>
@@ -45,42 +49,37 @@ let rec interp (env: (string * Value * (bool ref)) list) sim exp =
     | Match(cond, cases) -> interp_match env sim cond cases
     | Unit -> Unit_Val
     | Literal v -> v
-    //| _ -> failwith "it's not possible!"
 
 and interp_variable env (sim: QuantumSimulator) v =
-        // first try to find variable and function in environment
-        match find_defined env v with
+    // first try to find variable and function in environment
+    match find_defined env v with
+    | Some value -> value
+    | None -> 
+        // then try to find variables/functions defined in standard library
+        match find_std sim interp v with
         | Some value -> value
-        | None -> 
-            // then try to find variables/functions defined in standard library
-            match find sim interp v with
-            | Some value -> value
-            // if find nothing, then the variable is either not in scope at all 
-            // or it is a qubit and its ownership has been transfered
-            | None -> failwith $"{v} does not exist in the current space-time frame"
+        // if find nothing, then the variable is either not in scope at all 
+        // or it is a qubit and its ownership has been transfered
+        | None -> failwith $"{v} does not exist in the current space-time frame"
 
-// TODO: qubit support
 and interp_array env sim exps =
     let result_vector = 
         List.map (interp env sim) exps
     in
     Array_Val result_vector
 
-// TODO: qubit support
 and interp_system env sim qexps =
     let result_vector =
         List.map (interp env sim) qexps
     in
     System_Val result_vector
 
-// TODO: qubit support
 and interp_tuple env sim exps =
     let result_vector =
         List.map (interp env sim) exps
     in
     Tuple_Val result_vector
 
-// TODO: qubit support
 and interp_let_fun env sim name ps body in_expr =
     // put all info into the reduced function without changing anything
     // since here it follows call by name
@@ -88,13 +87,11 @@ and interp_let_fun env sim name ps body in_expr =
     let new_env = (name, fun_red, ref false) :: env
     interp new_env sim in_expr
 
-// TODO: qubit support
 and interp_let_var env sim name exp in_expr =
     let res = interp env sim exp
     let new_env = (name, res, ref false) :: env
     interp new_env sim in_expr
 
-// not sure if it is compatible with qubits
 and interp_apply env sim func args =
     // whatever what the expression might be, evaluate it first
     // it may actually be a variable or expression, doesn't matter
@@ -118,7 +115,6 @@ and interp_apply env sim func args =
     // apply "apply" to values. wierd, but acceptable
     | other -> other
 
-// TODO: qubit support
 and interp_match env sim cond cases =
     // cond: condition
     let rec interp_match_rec env cond cases =

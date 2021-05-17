@@ -1,3 +1,4 @@
-let id x = x in
-let add1 x = (add 1 x) in
-(map add1 (range 0 9 2))
+//let id x = x in
+//let add1 x = (add 1 x) in
+//(map add1 (range 0 9 2))
+(fold add 0 (range 5))
