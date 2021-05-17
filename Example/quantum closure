@@ -1,0 +1,5 @@
+let q = (new 0) in
+let f x =
+    (add (measure q) x)
+in
+(f 0)
