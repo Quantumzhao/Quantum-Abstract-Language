@@ -6,11 +6,9 @@ open Helper
 open DecimalMath
 open QuantumLib
 open TypeDef
-open Microsoft.Quantum.Canon
 open Microsoft.Quantum.Simulation.Simulators
 
 // TODO: 
-// fold: the familiar fold. (a' -> b' -> a') -> a' -> b' list -> a'
 // borrow: borrows a set of qubits, do some operations, and then return the qubits back to the set
 //         (System -> a') -> System -> System * a'
 
@@ -91,6 +89,7 @@ let complex_constructor args =
     | Some m :: Some a :: []  -> Complex_Val(m, a)
     | _ -> invalidArg "modulus and argument" "either one of them is a complex number"
 
+/// adds integers or complexes (including decimals)
 let rec private add args =
     match args with
     // integer addition
@@ -126,6 +125,16 @@ let rec private add args =
         invalidArg "expression 1 or expression 2" $"cannot cast either {other1} or {other2} to integer"
     | _ -> too_many_args_err 2 args
 
+/// <summary>
+/// print the argument
+/// </summary>
+/// <param name="args">
+/// accepts: 
+/// - string
+/// - integer
+/// - complex (including decimals)
+/// - tuple
+/// </param>
 let rec private print args =
     match args with
     | [] -> 
@@ -378,6 +387,15 @@ let private index args =
         not_implemented_err ()
     | _ -> too_many_args_err 2 args
 
+/// <summary> the good ol' <c>map</c> function </summary>
+/// <param name="interp_w_sim">the interp function that
+/// has been partially applied with environment and quantum simulator</param>
+/// <param name="args">
+/// The signiture is: 
+/// - either <c>('a -> 'b) -> Array of 'a -> Array of 'b </c>
+/// - or <c>(Qubit -> 'a) -> System -> Array of 'a</c>
+/// - or <c>(Qubit -> Qubit) -> System -> System</c>
+/// </param>
 let private map interp_w_sim (args: Value list) =
     let to_expr_list list =
         match list with
@@ -392,6 +410,14 @@ let private map interp_w_sim (args: Value list) =
         Array_Val final_collec
     | _ -> not_implemented_err ()
 
+/// <summary> the good ol' left <c>fold</c> function </summary>
+/// <param name="interp_w_sim">the interp function that
+/// has been partially applied with environment and quantum simulator</param>
+/// <param name="args">
+/// The signiture is: 
+/// - either <c> accumulator: ('a -> 'x -> 'a) -> initial: 'a -> Array of 'x -> Array of 'a </c>
+/// - or <c>('a -> Qubit -> 'a) -> Array of 'a -> System -> Array of 'a</c>
+/// </param>
 let private fold (interp_w_sim: Expr -> Value) (args: Value list) =
     let to_expr_list list =
         match list with
@@ -404,6 +430,20 @@ let private fold (interp_w_sim: Expr -> Value) (args: Value list) =
         let apply_2_ele acc e = Apply(Literal func, [Literal acc; e])
         List.fold (fun acc x -> interp_w_sim (apply_2_ele acc x)) accumulator eval'ed_collec
     | _ -> not_implemented_err ()
+
+/// <summary> 
+/// first borrows some qubits described by the discriminator from a composite system, 
+/// do some operations and then put them back as well as returning the results
+/// </summary>
+/// <param name="interp_w_sim">the interp function that
+/// has been partially applied with environment and quantum simulator</param>
+/// <param name="args">
+/// The signiture is: 
+/// - <c>discriminator -> operation -> system -> result * system</c>
+/// </param>
+let private borrow interp_w_sim args =
+
+    not_implemented_err ()
 
 /// <summary>
 /// try to find a variable/standard libray function by the given name
@@ -430,7 +470,7 @@ let public find_std sim (interp: 'a list -> QuantumSimulator -> Expr -> Value) n
         | "fold" -> Some (Function_Std(name, (fold (interp [] sim))))
         // qubit operations
         | "new" -> Some (Function_Std(name, (new_qubit sim)))
-        | "Qubits" -> Some (Function_Std(name, (new_qubits sim)))
+        | "System" -> Some (Function_Std(name, (new_qubits sim)))
         | "measure" -> Some (Function_Std(name, (measure sim)))
         | "H" | "X" | "Y" | "Z" | "CNOT" -> Some (Function_Std(name, (basic_gate sim name)))
         | _ -> None
