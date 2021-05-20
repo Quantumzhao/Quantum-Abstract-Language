@@ -1,5 +1,3 @@
-//let a = (new 0) in
-//((H a), (H a))
 let q1 = (new 0) in
 let f x = 
 	let q2 = (H q1) in
