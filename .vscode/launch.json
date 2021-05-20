@@ -10,9 +10,9 @@
             "request": "launch",
             "preLaunchTask": "buildF",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/NotQSharp/bin/Debug/netcoreapp3.1/NotQSharp.dll",
+            "program": "${workspaceFolder}/Interpreter/bin/Debug/netcoreapp3.1/NotQSharp.dll",
             "args": ["/../Example/high order"],
-            "cwd": "${workspaceFolder}/NotQSharp",
+            "cwd": "${workspaceFolder}/Interpreter",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "integratedTerminal",
             "stopAtEntry": false

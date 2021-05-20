@@ -19,7 +19,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/NotQSharp/NotQSharp.fsproj",
+                "${workspaceFolder}/Interpreter/Interpreter.fsproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
