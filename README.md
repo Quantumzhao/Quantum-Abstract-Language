@@ -1,10 +1,3 @@
-# To Discuss
-
-Needs inquiry:
-
-- how to verify a unitary operation programmatically
-- how to implement rational exponent of unitary operators
-
 # TODO
 
 - [X] a fully functional lexer
@@ -23,9 +16,8 @@ Needs inquiry:
   - [X] qubit management
   - [x] other
 - [ ] standard library
-  - [ ] `pow`
   - [X] `map`
-  - [ ] `fold`
+  - [X] `fold`
   - [ ] `borrow`
   - [X] other functions
 
@@ -86,7 +78,7 @@ See `./Example`
   
 - [x] name
 
-  > QML
+  > QAL
 
 - [X] call by name
 
