@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="fs\Constants.fs" />
+    <Compile Include="fs\Misc.fs" />
+    <Compile Include="fs\Arithmetic.fs" />
+    <Compile Include="fs\IO.fs" />
+    <Compile Include="fs\CollectionOps.fs" />
+    <Compile Include="fs\Quantum.fs" />
+    <Compile Include="Locator.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Quantum.Development.Kit" Version="0.17.2105143879" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Definitions\Definitions.fsproj" />
+    <ProjectReference Include="..\Simulator\Simulator.csproj" />
+    <ProjectReference Include="..\Utils\Utils.fsproj" />
+  </ItemGroup>
+</Project>

@@ -1,4 +1,4 @@
-﻿namespace QuantumLib {
+﻿namespace QAL.QuantumLib {
 
     open Microsoft.Quantum.Canon;
     open Microsoft.Quantum.Intrinsic;
