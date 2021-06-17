@@ -1,3 +1,5 @@
+<img src="./icon/Asset 4@4x.png" alt="Asset 4@4x" style="zoom:20%;" />
+
 # TODO
 
 - [X] a fully functional lexer
@@ -279,7 +281,6 @@ There are some peculiarities:
   ```
 
   Is illegal
-
 
 
 

@@ -1,0 +1,10 @@
+let dcoin = new 0 in
+let rec qwalk coin = 
+    let dcoin' = H coin in
+    let walk_left lcoin = 
+        ignore (walk_left ())
+        qwalk lcoin
+    let after, _ = borrow (fun c -> ctrl_on_int 0 c (walk_left ())) dcoin'
+    let after', _ = borrow (fun c -> ctrl_on_int 1 c (walk_right ())) after
+in
+qwalk dcoin
