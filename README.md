@@ -1,4 +1,4 @@
-<img src="./icon/Asset 4@4x.png" alt="Asset 4@4x" style="zoom:20%;" />
+<img src="./icon/Asset 4@4x.png" alt="Asset 4@4x" style="zoom:10%;" />
 
 # TODO
 
